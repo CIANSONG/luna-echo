@@ -804,65 +804,7 @@
     </div>
 
     <!-- Service Worker 注册 -->
-    <script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(function(reg) {
-            // 监听更新
-            reg.addEventListener('updatefound', function() {
-                var newWorker = reg.installing;
-                newWorker.addEventListener('statechange', function() {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        showUpdateBanner();
-                    }
-                });
-            });
-        });
-        
-        // 监听来自 SW 的消息
-        navigator.serviceWorker.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'UPDATE_READY') {
-                showUpdateBanner();
-            }
-        });
-    }
-
-    function showUpdateBanner() {
-        var old = document.getElementById('updateBanner');
-        if (old) old.remove();
-        var banner = document.createElement('div');
-        banner.id = 'updateBanner';
-        banner.style.cssText = 'position:fixed;top:12px;left:12px;right:12px;z-index:2500;background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 4px 24px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;';
-        banner.innerHTML = '<span style="font-size:20px;">🔄</span><div style="flex:1;"><strong style="font-size:14px;">新版本已就绪</strong><br><span style="font-size:12px;color:#8C7C80;">点击重启生效</span></div><button onclick="location.reload()" style="padding:8px 18px;border-radius:16px;background:#C97B7B;color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;">更新</button><button onclick="this.parentElement.remove()" style="padding:8px;background:none;border:none;color:#B8A9AC;font-size:16px;cursor:pointer;">✕</button>';
-        document.body.appendChild(banner);
-    }
-
-    // 安装引导
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', function(e) {
-        e.preventDefault();
-        deferredPrompt = e;
-        // 延迟显示，避免干扰引导页
-        setTimeout(function() {
-            if (localStorage.getItem('pwa_dismissed') !== '1') {
-                document.getElementById('pwaInstallBanner').style.display = 'block';
-            }
-        }, 3000);
-    });
-
-    window.installPWA = function() {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then(function(result) {
-                document.getElementById('pwaInstallBanner').style.display = 'none';
-                deferredPrompt = null;
-            });
-        } else {
-            // iOS fallback: 提示用户手动操作
-            alert('请点击浏览器底部「分享」按钮 → 选择「添加到主屏幕」');
-        }
-    };
-
-    window.dismissPWA = function() {
+    <script src="js/lunar.js"></script>
 <script> 
 
 const LunarCalendar = {
@@ -6942,9 +6884,4 @@ function stopChatVoice() {
 }
 
 </script>
-    <script src="js/growth.js"></script>
-    <script src="js/community.js"></script>
-    <script src="js/charts.js"></script>
-    <script src="js/app.js"></script>
-</body>
 </html>
