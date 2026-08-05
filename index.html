@@ -4140,21 +4140,10 @@ function init() {
     setInterval(updateStatusTime, 30000);
 
     try { renderHome(); } catch(e) {}
-    try { renderLogPage(); } catch(e) {}
-    try { renderAIPage(); } catch(e) {}
-    try { renderCommunityPage(); } catch(e) {}
-    try { renderProfilePage(); } catch(e) {}
-
-    try { initLogInteractions(); } catch(e) {}
-    try { initChatInput(); } catch(e) {}
-    try { initVoiceRecognition(); } catch(e) {}
 
     
-    try {
-        if (Onboarding.needsOnboarding(appData.profile) || window.location.search.includes('onboarding=1')) {
-            showOnboarding();
-        }
-    } catch(e) {}
+    initLogInteractions();
+    initChatInput();
 
     document.addEventListener('click', () => {});
 }
