@@ -4161,25 +4161,23 @@ function updateStatusTime() {
 
 function switchPage(pageName) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + pageName).classList.add('active');
+    const pageEl = document.getElementById('page-' + pageName);
+    if (pageEl) pageEl.classList.add('active');
 
     document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-    const tab = document.querySelector(`.tab-item[data-page="${pageName}"]`);
+    const tab = document.querySelector('.tab-item[data-page="' + pageName + '"]');
     if (tab) tab.classList.add('active');
 
-    if (pageName === 'stats') {
-        renderStatsPage();
-    } else if (pageName === 'home') {
-        renderHome();
-    } else if (pageName === 'ai') {
-        renderAIPage();
-    } else if (pageName === 'log') {
-        renderLogPage();
-    } else if (pageName === 'community') {
-        renderCommunityPage();
-    }
+    try {
+        if (pageName === 'stats') renderStatsPage();
+        else if (pageName === 'home') renderHome();
+        else if (pageName === 'ai') renderAIPage();
+        else if (pageName === 'log') renderLogPage();
+        else if (pageName === 'community') renderCommunityPage();
+        else if (pageName === 'profile') renderProfilePage();
+    } catch(e) {}
 
-    const content = document.querySelector(`#page-${pageName} .scroll-content`);
+    const content = document.querySelector('#page-' + pageName + ' .scroll-content');
     if (content) content.scrollTop = 0;
 }
 
