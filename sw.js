@@ -5,7 +5,7 @@ const CACHE_NAME = 'luna-echo-v' + VERSION;
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(['./'])
+      return cache.addAll(['./']);
     }).then(() => self.skipWaiting())
   );
 });
