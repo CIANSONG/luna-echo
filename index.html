@@ -456,18 +456,16 @@
             </div>
 
             <div class="scroll-content">
-                <!-- 成长话题横滑 -->
-                <div class="section" id="communityTopics">
-                    <div class="section-header">
-                        <h2>🌱 成长话题</h2>
-                    </div>
-                    <div class="ct-scroll" id="ctScroll">
-                        <!-- 动态生成：小卡片横滑 -->
-                    </div>
+                <!-- 社区 / 我的日记 切换 -->
+                <div class="community-tabs" style="display:flex;gap:0;margin-bottom:12px;">
+                    <button class="ct-tab active" id="ctTabCommunity" onclick="switchCommunityTab('community')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:var(--primary-bg);color:var(--primary);">🌍 社区</button>
+                    <button class="ct-tab" id="ctTabMyDiary" onclick="switchCommunityTab('mydiary')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--text-secondary);">📖 我的日记</button>
                 </div>
 
                 <!-- 社区 Feed -->
-                <div class="section" id="communityFeed">
+                <div id="communityFeedArea"></div>
+                <!-- 我的日记 -->
+                <div id="myDiaryArea" style="display:none;"></div>
                     <!-- 动态生成 -->
                 </div>
 
@@ -5843,7 +5841,7 @@ function renderCommunityPage() {
 
     // ===== 2. 社区 Feed =====
     const feed = Community.getFeed(appData);
-    const feedEl = document.getElementById('communityFeed');
+    const feedEl = document.getElementById("communityFeedArea");
     const myAvatar = appData.profile?.avatar || '✦';
     const avatarHtml = myAvatar && myAvatar.startsWith('data:') 
         ? `<img src="${myAvatar}" alt="">` : myAvatar;
@@ -6932,6 +6930,60 @@ function stopChatVoice() {
     if (chatVoiceText.trim()) {
         setTimeout(function() { sendMessage(); }, 200);
     }
+}
+
+var communityTab = 'community';
+
+function switchCommunityTab(tab) {
+    communityTab = tab;
+    var ct = document.getElementById('ctTabCommunity');
+    var md = document.getElementById('ctTabMyDiary');
+    var ca = document.getElementById("communityFeedArea")ea');
+    var ma = document.getElementById('myDiaryArea');
+    if (tab === 'community') {
+        ct.style.background = 'var(--primary-bg)'; ct.style.color = 'var(--primary)'; ct.style.fontWeight = '600';
+        md.style.background = 'transparent'; md.style.color = 'var(--text-secondary)'; md.style.fontWeight = '500';
+        ca.style.display = 'block'; ma.style.display = 'none';
+    } else {
+        md.style.background = 'var(--primary-bg)'; md.style.color = 'var(--primary)'; md.style.fontWeight = '600';
+        ct.style.background = 'transparent'; ct.style.color = 'var(--text-secondary)'; ct.style.fontWeight = '500';
+        ca.style.display = 'none'; ma.style.display = 'block';
+        renderMyDiaries();
+    }
+}
+
+function renderMyDiaries() {
+    var area = document.getElementById('myDiaryArea');
+    if (!area) return;
+    var publicDiaries = Community.getFeed(appData);
+    var privateDiaries = Community.getPrivateDiaries(appData);
+    var allDiaries = publicDiaries.concat(privateDiaries).sort(function(a, b) { return b.date.localeCompare(a.date); });
+    
+    if (allDiaries.length === 0) {
+        area.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-light);">📖 还没有写过日记<br><span style="font-size:12px;">点击右上角「+ 写日记」开始记录</span></div>';
+        return;
+    }
+    
+    area.innerHTML = allDiaries.map(function(entry) {
+        var comments = entry.comments || [];
+        var eAvatar = entry.avatar && entry.avatar.startsWith('data:') ? '<img src="' + entry.avatar + '" alt="">' : entry.avatar;
+        return '<div class="community-card card">' +
+            '<div class="cc-header">' +
+                '<div class="cc-author-avatar">' + (eAvatar || '✦') + '</div>' +
+                '<div class="cc-author-info">' +
+                    '<div class="cc-author-name">' + (entry.author || '我') + '</div>' +
+                    '<div class="cc-entry-date">' + (DB.formatDateCN ? DB.formatDateCN(entry.date) : entry.date) + (entry.isPublic ? ' · 🌍公开' : ' · 🔒私密') + '</div>' +
+                '</div>' +
+                '<div class="cc-mood-tag">' + (entry.moodLabel || '记录') + '</div>' +
+            '</div>' +
+            '<div class="cc-body"><div class="cc-voice-text">' + (entry.voiceText || '') + '</div></div>' +
+            '<div class="cc-footer" style="font-size:12px;color:var(--text-light);display:flex;gap:12px;padding-top:8px;">' +
+                '<span>💬 ' + comments.length + '</span>' +
+                '<span>❤️ ' + (entry.likes || 0) + '</span>' +
+                '<span style="margin-left:auto;">' + (entry.isPublic ? '🌍 已公开' : '🔒 仅自己可见') + '</span>' +
+            '</div>' +
+        '</div>';
+    }).join('');
 }
 
 </script>
