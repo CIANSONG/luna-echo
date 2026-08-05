@@ -6642,19 +6642,40 @@ function submitFeedback() {
     const statusEl = document.getElementById('feedbackStatus');
     const nickname = appData.profile?.nickname || 'LUNA用户';
     
+    
     if (!appData.feedbacks) appData.feedbacks = [];
     appData.feedbacks.push({ text, nickname, date: new Date().toISOString() });
     DB.save(appData);
     
-    const subject = encodeURIComponent('[LUNA意见反馈] 来自' + nickname);
-    const body = encodeURIComponent('用户：' + nickname + '\n时间：' + new Date().toLocaleString() + '\n\n' + text + '\n\n---\n来自 LUNA Echo 意见箱');
-    window.location.href = 'mailto:18271216927@163.com?subject=' + subject + '&body=' + body;
-    
-    document.getElementById('feedbackText').value = '';
     statusEl.style.display = 'block';
-    statusEl.style.color = '#8BA89A';
-    statusEl.textContent = '✅ 已保存，正在打开邮件...';
-    setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
+    statusEl.style.color = '#C97B7B';
+    statusEl.textContent = '📨 发送中...';
+    
+    
+    fetch('https:
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name: nickname,
+            message: text,
+            _subject: '[LUNA意见箱] 来自' + nickname,
+            _captcha: 'false'
+        })
+    }).then(function() {
+        document.getElementById('feedbackText').value = '';
+        statusEl.style.color = '#8BA89A';
+        statusEl.textContent = '✅ 已发送，感谢你的反馈 💗';
+        setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
+    }).catch(function() {
+        
+        var subject = encodeURIComponent('[LUNA意见反馈] 来自' + nickname);
+        var body = encodeURIComponent('用户：' + nickname + '\n时间：' + new Date().toLocaleString() + '\n\n' + text);
+        window.open('mailto:18271216927@163.com?subject=' + subject + '&body=' + body);
+        document.getElementById('feedbackText').value = '';
+        statusEl.style.color = '#8BA89A';
+        statusEl.textContent = '✅ 已保存，已打开邮件发送';
+        setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
+    });
 }
 
 
