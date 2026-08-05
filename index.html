@@ -804,55 +804,57 @@
     </div>
 
     <!-- Service Worker 注册 -->
-    <script src="js/lunar.js"></script>
-<script> 
+    <script>/* ========================================
+   LUNA — 农历日期转换模块
+   基于标准中国农历算法
+   ======================================== */
 
 const LunarCalendar = {
-    
-    
-    
-    
-    
+    // 农历数据表 1900-2100
+    // 每年用十六进制编码：
+    // bits[15:4] = 12个月的大小月标志(1=30天,0=29天)
+    // bits[3:0] = 闰月月份(0=无闰月)
+    // 闰月天数单独存储在 leapDays 数组中
     LUNAR_INFO: [
-        0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
-        0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
-        0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
-        0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
-        0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
-        0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
-        0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
-        0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
-        0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
-        0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,
-        0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
-        0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
-        0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
-        0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
-        0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,
-        0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,
-        0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,
-        0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
-        0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,
-        0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,
-        0x0d520,                                            
+        0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,//1900-1909
+        0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,//1910-1919
+        0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,//1920-1929
+        0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,//1930-1939
+        0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,//1940-1949
+        0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,//1950-1959
+        0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,//1960-1969
+        0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,//1970-1979
+        0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,//1980-1989
+        0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,//1990-1999
+        0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,//2000-2009
+        0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,//2010-2019
+        0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,//2020-2029
+        0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,//2030-2039
+        0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,//2040-2049
+        0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,//2050-2059
+        0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,//2060-2069
+        0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,//2070-2079
+        0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,//2080-2089
+        0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,//2090-2099
+        0x0d520,                                            //2100
     ],
 
-    
+    // 天干
     TIANGAN: ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'],
-    
+    // 地支
     DIZHI: ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'],
-    
+    // 生肖
     ZODIAC: ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'],
-    
+    // 农历月份
     LUNAR_MONTH: ['正','二','三','四','五','六','七','八','九','十','冬','腊'],
-    
+    // 农历日
     LUNAR_DAY: [
         '初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
         '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
         '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'
     ],
 
-    
+    // 获取农历年总天数
     lYearDays(y) {
         let sum = 348;
         for (let i = 0x8000; i > 0x8; i >>= 1) {
@@ -861,7 +863,7 @@ const LunarCalendar = {
         return sum + this.leapDays(y);
     },
 
-    
+    // 闰月天数
     leapDays(y) {
         if (this.leapMonth(y)) {
             return (this.LUNAR_INFO[y - 1900] & 0x10000) ? 30 : 29;
@@ -869,20 +871,20 @@ const LunarCalendar = {
         return 0;
     },
 
-    
+    // 闰月月份
     leapMonth(y) {
         return this.LUNAR_INFO[y - 1900] & 0xf;
     },
 
-    
+    // 农历某月天数
     monthDays(y, m) {
         return (this.LUNAR_INFO[y - 1900] & (0x10000 >> m)) ? 30 : 29;
     },
 
-    
+    // 公历转农历
     solarToLunar(date) {
         const d = date instanceof Date ? date : new Date(date);
-        const baseDate = new Date(1900, 0, 31); 
+        const baseDate = new Date(1900, 0, 31); // 1900-01-31 = 农历正月初一
         let offset = Math.floor((d - baseDate) / 86400000);
 
         let temp = 0;
@@ -937,25 +939,25 @@ const LunarCalendar = {
             isLeap: isLeap,
             monthStr: (isLeap ? '闰' : '') + this.LUNAR_MONTH[lunarMonth - 1] + '月',
             dayStr: this.LUNAR_DAY[lunarDay - 1],
-            
+            // 干支年（生肖年）
             ganzhiYear: this.TIANGAN[(lunarYear - 4) % 10] + this.DIZHI[(lunarYear - 4) % 12],
             zodiac: this.ZODIAC[(lunarYear - 4) % 12],
         };
     },
 
-    
+    // 格式化农历日期为简短字符串
     formatLunar(date) {
         const lunar = this.solarToLunar(date);
         return lunar.monthStr + lunar.dayStr;
     },
 
-    
+    // 格式化农历日期为完整字符串（含生肖年）
     formatLunarFull(date) {
         const lunar = this.solarToLunar(date);
         return lunar.zodiac + '年 ' + lunar.monthStr + lunar.dayStr;
     },
 
-    
+    // 获取节气（简化版，基于近似日期）
     getSolarTerm(date) {
         const d = date instanceof Date ? date : new Date(date);
         const month = d.getMonth() + 1;
@@ -973,36 +975,39 @@ const LunarCalendar = {
     },
 };
 
- 
+/* ========================================
+   LUNA — 数据管理模块
+   负责 LocalStorage 读写、数据结构管理
+   ======================================== */
 
 const DB = {
     STORAGE_KEY: 'yuejian_data',
 
-    
+    // 默认数据结构
     defaults: {
         profile: {
             name: 'LUNA用户',
             cycleLength: 28,
             periodLength: 5,
-            lastPeriodStart: null,  
-            lifeStage: 'all',       
+            lastPeriodStart: null,  // ISO date string
+            lifeStage: 'all',       // 人生阶段：menarche/teen/twenties/thirties/perimenopause/postmenopause/all
             createdAt: null,
         },
-        periods: [],      
-        dailyLogs: {},    
-        chatHistory: [],  
-        customMoods: [],      
-        customSymptoms: [],   
-        customDietTags: [],   
+        periods: [],      // [{startDate, endDate, flowLevels: {date: 'light|medium|heavy|very_heavy'}}]
+        dailyLogs: {},    // { 'YYYY-MM-DD': { mood, energy, symptoms, diet, sleep, exercise, water, notes } }
+        chatHistory: [],  // [{role: 'ai|user', content, timestamp}]
+        customMoods: [],      // 用户自定义情绪
+        customSymptoms: [],   // 用户自定义症状
+        customDietTags: [],   // 用户自定义饮食标签
     },
 
-    
+    // 加载数据
     load() {
         try {
             const raw = localStorage.getItem(this.STORAGE_KEY);
             if (raw) {
                 const data = JSON.parse(raw);
-                
+                // 合并默认值，防止字段缺失
                 return { ...this.defaults, ...data, profile: { ...this.defaults.profile, ...(data.profile || {}) } };
             }
         } catch (e) {
@@ -1011,7 +1016,7 @@ const DB = {
         return JSON.parse(JSON.stringify(this.defaults));
     },
 
-    
+    // 保存数据
     save(data) {
         try {
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
@@ -1022,12 +1027,12 @@ const DB = {
         }
     },
 
-    
+    // 清除数据
     clear() {
         localStorage.removeItem(this.STORAGE_KEY);
     },
 
-    
+    // 格式化日期为 YYYY-MM-DD
     formatDate(date) {
         const d = date instanceof Date ? date : new Date(date);
         const y = d.getFullYear();
@@ -1036,44 +1041,44 @@ const DB = {
         return `${y}-${m}-${day}`;
     },
 
-    
+    // 解析日期字符串
     parseDate(str) {
         return new Date(str + 'T00:00:00');
     },
 
-    
+    // 计算两个日期之间的天数差
     daysBetween(date1, date2) {
         const d1 = date1 instanceof Date ? date1 : this.parseDate(date1);
         const d2 = date2 instanceof Date ? date2 : this.parseDate(date2);
         return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
     },
 
-    
+    // 获取今天的格式化日期
     today() {
         return this.formatDate(new Date());
     },
 
-    
+    // 获取指定偏移天数的日期
     offsetDate(days) {
         const d = new Date();
         d.setDate(d.getDate() + days);
         return this.formatDate(d);
     },
 
-    
+    // 星期中文
     weekdayCN(date) {
         const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
         const d = date instanceof Date ? date : this.parseDate(date);
         return days[d.getDay()];
     },
 
-    
+    // 格式化日期为中文显示
     formatDateCN(date) {
         const d = date instanceof Date ? date : this.parseDate(date);
         return `${d.getMonth() + 1}月${d.getDate()}日 ${this.weekdayCN(d)}`;
     },
 
-    
+    // 格式化日期（含农历）
     formatDateWithLunar(date) {
         const d = date instanceof Date ? date : this.parseDate(date);
         const lunar = LunarCalendar.solarToLunar(d);
@@ -1084,23 +1089,25 @@ const DB = {
         return str;
     },
 
-    
+    // 获取农历简短显示
     getLunarShort(date) {
         const d = date instanceof Date ? date : this.parseDate(date);
         return LunarCalendar.formatLunar(d);
     },
 
-    
+    // 获取农历完整显示
     getLunarFull(date) {
         const d = date instanceof Date ? date : this.parseDate(date);
         return LunarCalendar.formatLunarFull(d);
     },
 };
 
- 
+/* ========================================
+   周期计算工具
+   ======================================== */
 
 const CycleUtils = {
-    
+    // 周期四阶段
     PHASES: {
         menstrual: { name: '经期', emoji: '🩸', color: '#E8788E', desc: '身体正在排出子宫内膜，注意保暖休息' },
         follicular: { name: '卵泡期', emoji: '✨', color: '#F5A7B8', desc: '雌激素上升，精力恢复，适合尝试新事物' },
@@ -1108,7 +1115,7 @@ const CycleUtils = {
         luteal: { name: '黄体期', emoji: '🌙', color: '#FFB347', desc: '孕激素升高，可能出现经前综合征，注意情绪管理' },
     },
 
-    
+    // 根据周期天数判断当前阶段
     getPhase(cycleDay, cycleLength, periodLength) {
         if (cycleDay <= periodLength) {
             return 'menstrual';
@@ -1121,13 +1128,13 @@ const CycleUtils = {
         }
     },
 
-    
+    // 获取当前周期日（从最近一次经期开始计算）
     getCurrentCycleDay(lastPeriodStart, today) {
         if (!lastPeriodStart) return null;
         return DB.daysBetween(lastPeriodStart, today || DB.today()) + 1;
     },
 
-    
+    // 预测下次经期
     predictNextPeriod(lastPeriodStart, cycleLength) {
         if (!lastPeriodStart) return null;
         const last = DB.parseDate(lastPeriodStart);
@@ -1136,14 +1143,14 @@ const CycleUtils = {
         return DB.formatDate(next);
     },
 
-    
+    // 计算距离下次经期的天数
     daysToNextPeriod(lastPeriodStart, cycleLength, today) {
         const next = this.predictNextPeriod(lastPeriodStart, cycleLength);
         if (!next) return null;
         return DB.daysBetween(today || DB.today(), next);
     },
 
-    
+    // 预测未来N个月的经期
     predictFuturePeriods(lastPeriodStart, cycleLength, months) {
         if (!lastPeriodStart) return [];
         const predictions = [];
@@ -1160,7 +1167,7 @@ const CycleUtils = {
         return predictions;
     },
 
-    
+    // 预测排卵日（基于下次经期倒推14天）
     predictOvulation(lastPeriodStart, cycleLength) {
         if (!lastPeriodStart) return null;
         const nextPeriod = this.predictNextPeriod(lastPeriodStart, cycleLength);
@@ -1170,7 +1177,7 @@ const CycleUtils = {
         return DB.formatDate(ovulation);
     },
 
-    
+    // 获取受孕窗口（排卵前5天到排卵后1天）
     getFertilityWindow(lastPeriodStart, cycleLength) {
         const ovulation = this.predictOvulation(lastPeriodStart, cycleLength);
         if (!ovulation) return null;
@@ -1186,7 +1193,7 @@ const CycleUtils = {
         };
     },
 
-    
+    // 获取历史周期列表
     getPeriodHistory(periods, cycleLength) {
         if (!periods || periods.length === 0) return [];
         const sorted = [...periods].sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
@@ -1206,7 +1213,7 @@ const CycleUtils = {
         return history;
     },
 
-    
+    // 计算平均周期长度
     getAvgCycleLength(periods, defaultLength) {
         const history = this.getPeriodHistory(periods);
         const lengths = history.filter(h => h.cycleLength && h.cycleLength >= 21 && h.cycleLength <= 45).map(h => h.cycleLength);
@@ -1214,7 +1221,7 @@ const CycleUtils = {
         return Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length);
     },
 
-    
+    // 计算平均经期长度
     getAvgPeriodLength(periods, defaultLength) {
         const history = this.getPeriodHistory(periods);
         const lengths = history.filter(h => h.periodLength).map(h => h.periodLength);
@@ -1222,7 +1229,7 @@ const CycleUtils = {
         return Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length);
     },
 
-    
+    // 计算周期规律性（标准差越小越规律）
     getRegularity(periods) {
         const history = this.getPeriodHistory(periods);
         const lengths = history.filter(h => h.cycleLength && h.cycleLength >= 21 && h.cycleLength <= 45).map(h => h.cycleLength);
@@ -1236,23 +1243,25 @@ const CycleUtils = {
     },
 };
 
- 
+/* ========================================
+   示例数据生成器（帮助用户快速体验）
+   ======================================== */
 
 const SampleData = {
     generate() {
         const today = new Date();
         const data = JSON.parse(JSON.stringify(DB.defaults));
 
-        
+        // 设置个人资料
         const lastPeriod = new Date(today);
-        lastPeriod.setDate(lastPeriod.getDate() - 15); 
+        lastPeriod.setDate(lastPeriod.getDate() - 15); // 15天前开始的最后一次经期
         data.profile.lastPeriodStart = DB.formatDate(lastPeriod);
         data.profile.cycleLength = 28;
         data.profile.periodLength = 5;
         data.profile.lifeStage = 'twenties';
-        data.profile.createdAt = DB.formatDate(new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000)); 
+        data.profile.createdAt = DB.formatDate(new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000)); // 60天前
 
-        
+        // 生成历史经期记录（3个月）
         const periodDates = [];
         for (let i = 0; i < 4; i++) {
             const start = new Date(lastPeriod);
@@ -1267,7 +1276,7 @@ const SampleData = {
         }
         data.periods = periodDates;
 
-        
+        // 生成每日记录（最近30天）
         const moods = ['happy', 'calm', 'anxious', 'sad', 'irritable', 'tired', 'energetic', 'sensitive'];
         const symptoms = ['cramps', 'headache', 'bloating', 'breast', 'acne', 'backache', 'fatigue', 'cravings'];
         const dietTags = ['warm', 'cold', 'spicy', 'sweet', 'caffeine', 'iron_rich', 'balanced', 'junk'];
@@ -1284,11 +1293,11 @@ const SampleData = {
             const dateStr = DB.formatDate(date);
             const cycleDay = CycleUtils.getCurrentCycleDay(DB.formatDate(lastPeriod), dateStr);
 
-            
+            // 根据周期阶段调整情绪和症状
             let moodList, symptomList, energy, sleepHours, sleepQ, water, exerciseType, exerciseDur;
 
             if (cycleDay <= 5) {
-                
+                // 经期
                 moodList = ['tired', 'sensitive'].slice(0, 1 + Math.floor(Math.random() * 2));
                 symptomList = ['cramps', 'fatigue', 'backache'].slice(0, 1 + Math.floor(Math.random() * 2));
                 energy = 1 + Math.floor(Math.random() * 2);
@@ -1298,7 +1307,7 @@ const SampleData = {
                 exerciseType = '';
                 exerciseDur = 0;
             } else if (cycleDay <= 14) {
-                
+                // 卵泡期
                 moodList = ['happy', 'calm', 'energetic'].slice(0, 1 + Math.floor(Math.random() * 2));
                 symptomList = [];
                 energy = 3 + Math.floor(Math.random() * 2);
@@ -1308,7 +1317,7 @@ const SampleData = {
                 exerciseType = ['瑜伽', '跑步', '游泳'][Math.floor(Math.random() * 3)];
                 exerciseDur = 30 + Math.floor(Math.random() * 30);
             } else if (cycleDay <= 17) {
-                
+                // 排卵期
                 moodList = ['energetic', 'happy'];
                 symptomList = [];
                 energy = 4 + Math.floor(Math.random() * 2);
@@ -1318,7 +1327,7 @@ const SampleData = {
                 exerciseType = ['跑步', 'HIIT', '舞蹈'][Math.floor(Math.random() * 3)];
                 exerciseDur = 40 + Math.floor(Math.random() * 20);
             } else {
-                
+                // 黄体期
                 moodList = ['irritable', 'anxious', 'sad', 'sensitive'].slice(0, 1 + Math.floor(Math.random() * 2));
                 symptomList = ['bloating', 'breast', 'acne', 'cravings', 'headache'].slice(0, 1 + Math.floor(Math.random() * 3));
                 energy = 2 + Math.floor(Math.random() * 2);
@@ -1387,12 +1396,12 @@ const SampleData = {
     }
 };
 
-
-
+// ===== 新用户引导模块 =====
+// 首次使用时的阶段选择引导
 
 const Onboarding = {
 
-  
+  // 人生阶段定义
   STAGES: {
     menarche: {
       id: 'menarche',
@@ -1456,7 +1465,7 @@ const Onboarding = {
     }
   },
 
-  
+  // 检查是否需要引导
   needsOnboarding(profile) {
     if (!profile || !profile.lifeStage || profile.lifeStage === 'all' || profile.lifeStage === '') {
       return true;
@@ -1464,12 +1473,12 @@ const Onboarding = {
     return false;
   },
 
-  
+  // 获取当前阶段信息
   getStageInfo(stageId) {
     return this.STAGES[stageId] || null;
   },
 
-  
+  // 根据阶段推荐知识卡片分类
   getRecommendedCategories(stageId) {
     const map = {
       menarche: ['周期护理', '常见问题'],
@@ -1483,11 +1492,16 @@ const Onboarding = {
   }
 };
 
- 
+/* ========================================
+   LUNA — 女性健康知识卡片库 V2.0
+   分类：常见问题 / 需关注 / 内分泌 / 生理知识 / 营养
+         周期护理 / 养雌指南 / 备孕指南 / 年龄阶段
+   每张卡片简洁明了，用户横向滑动浏览
+   ======================================== */
 
 const KnowledgeCards = {
     CARDS: [
-        
+        // ========== 周期四阶段身体护理 ==========
         {
             id: 'care_menstrual',
             emoji: '🩸',
@@ -1557,7 +1571,7 @@ const KnowledgeCards = {
             tip: '黄体期食欲旺盛是孕激素在起作用——不必自责。选择优质脂肪和高纤维食物来满足食欲。',
         },
 
-        
+        // ========== 养雌指南 ==========
         {
             id: 'estrogen_basics',
             emoji: '雌激素',
@@ -1612,7 +1626,7 @@ const KnowledgeCards = {
             tip: '过度节食和过度运动是年轻女性"伤雌"的两大杀手。身体的逻辑是：能量不足时优先关闭生殖功能。',
         },
 
-        
+        // ========== 备孕指南 ==========
         {
             id: 'prep_timeline',
             emoji: '📅',
@@ -1686,7 +1700,7 @@ const KnowledgeCards = {
             tip: '甲状腺功能异常是很多人忽略的备孕障碍。TSH>2.5可能影响受孕，建议提前检查调理。',
         },
 
-        
+        // ========== 年龄阶段护理 ==========
         {
             id: 'stage_menarche',
             emoji: '✨',
@@ -1800,7 +1814,7 @@ const KnowledgeCards = {
             tip: '绝经后不是"结束"，而是人生的新阶段。力量训练是这个年龄最好的"抗衰老药"——维持肌肉和骨密度。',
         },
 
-        
+        // ========== 常见问题（原有） ==========
         {
             id: 'pms',
             emoji: '🌑',
@@ -2043,20 +2057,20 @@ const KnowledgeCards = {
         },
     ],
 
-    
+    // 获取所有卡片
     getAll() {
         return this.CARDS;
     },
 
-    
+    // 按分类筛选
     getByCategory(category) {
         return this.CARDS.filter(c => c.category === category);
     },
 
-    
+    // 获取所有分类
     getCategories() {
         const cats = [...new Set(this.CARDS.map(c => c.category))];
-        
+        // 排序：让新分类排在前面
         const order = ['周期护理', '养雌指南', '备孕指南', '年龄阶段', '常见问题', '需关注', '内分泌', '生理知识', '营养'];
         return cats.sort((a, b) => {
             const ia = order.indexOf(a);
@@ -2065,17 +2079,17 @@ const KnowledgeCards = {
         });
     },
 
-    
+    // 按人生阶段筛选
     getByLifeStage(stage) {
         if (!stage || stage === 'all') return this.CARDS;
         return this.CARDS.filter(c => !c.stages || c.stages.includes('all') || c.stages.includes(stage));
     },
 
-    
+    // 获取推荐卡片（根据当前阶段、症状和人生阶段）
     getRecommended(phase, symptoms, lifeStage) {
         let recommended = [];
 
-        
+        // 根据人生阶段推荐年龄相关卡片
         if (lifeStage && lifeStage !== 'all') {
             const stageCard = this.CARDS.find(c => c.id === 'stage_' + lifeStage);
             if (stageCard) recommended.push(stageCard);
@@ -2097,7 +2111,7 @@ const KnowledgeCards = {
             }
         }
 
-        
+        // 根据症状推荐
         if (symptoms && symptoms.includes('cramps')) {
             const c = this.CARDS.find(c => c.id === 'dysmenorrhea');
             if (c) recommended.push(c);
@@ -2110,7 +2124,7 @@ const KnowledgeCards = {
             recommended.push(this.CARDS.find(c => c.id === 'edema'));
         }
 
-        
+        // 根据阶段推荐周期护理
         const phaseCareMap = {
             menstrual: 'care_menstrual',
             follicular: 'care_follicular',
@@ -2121,7 +2135,7 @@ const KnowledgeCards = {
             recommended.push(this.CARDS.find(c => c.id === phaseCareMap[phase]));
         }
 
-        
+        // 去重
         const seen = new Set();
         recommended = recommended.filter(c => {
             if (!c || seen.has(c.id)) return false;
@@ -2129,7 +2143,7 @@ const KnowledgeCards = {
             return true;
         });
 
-        
+        // 如果推荐不足4张，补充其他卡片
         if (recommended.length < 4) {
             this.CARDS.forEach(c => {
                 if (recommended.length < 4 && !seen.has(c.id)) {
@@ -2143,10 +2157,13 @@ const KnowledgeCards = {
     },
 };
 
- 
+/* ========================================
+   LUNA — AI健康分析引擎
+   周期分析、智能建议、对话式问答
+   ======================================== */
 
 const AI = {
-    
+    // 情绪映射
     MOOD_MAP: {
         happy: { label: '开心', emoji: '😄' },
         calm: { label: '平静', emoji: '😊' },
@@ -2158,7 +2175,7 @@ const AI = {
         sensitive: { label: '敏感', emoji: '🥺' },
     },
 
-    
+    // 症状映射
     SYMPTOM_MAP: {
         cramps: '痛经',
         headache: '头痛',
@@ -2177,7 +2194,7 @@ const AI = {
         libido_change: '性欲变化',
     },
 
-    
+    // 睡眠质量映射
     SLEEP_MAP: {
         poor: '差',
         fair: '一般',
@@ -2185,14 +2202,14 @@ const AI = {
         excellent: '很好',
     },
 
-    
+    // ===== 生成首页AI洞察 =====
     generateInsights(data) {
         const insights = [];
         const today = DB.today();
         const profile = data.profile;
         const todayLog = data.dailyLogs[today];
 
-        
+        // 1. 周期阶段分析
         if (profile.lastPeriodStart) {
             const cycleDay = CycleUtils.getCurrentCycleDay(profile.lastPeriodStart, today);
             const phase = CycleUtils.getPhase(cycleDay, profile.cycleLength, profile.periodLength);
@@ -2219,7 +2236,7 @@ const AI = {
                     text: `黄体期第${cycleDay}天，孕激素升高。可能出现情绪波动、水肿或食欲增加，这是正常的生理反应，注意自我关怀。`,
                 });
 
-                
+                // 经前综合征预警
                 const daysToNext = CycleUtils.daysToNextPeriod(profile.lastPeriodStart, profile.cycleLength, today);
                 if (daysToNext && daysToNext <= 7 && daysToNext > 0) {
                     insights.push({
@@ -2230,9 +2247,9 @@ const AI = {
             }
         }
 
-        
+        // 2. 今日记录分析
         if (todayLog) {
-            
+            // 情绪分析
             if (todayLog.mood && todayLog.mood.length > 0) {
                 const hasNegative = todayLog.mood.some(m => ['anxious', 'sad', 'irritable', 'sensitive'].includes(m));
                 if (hasNegative) {
@@ -2243,7 +2260,7 @@ const AI = {
                 }
             }
 
-            
+            // 睡眠分析
             if (todayLog.sleep) {
                 if (todayLog.sleep.hours < 6) {
                     insights.push({
@@ -2259,7 +2276,7 @@ const AI = {
                 }
             }
 
-            
+            // 饮食分析
             if (todayLog.diet && todayLog.diet.tags) {
                 if (todayLog.diet.tags.includes('cold')) {
                     insights.push({
@@ -2287,7 +2304,7 @@ const AI = {
                 }
             }
 
-            
+            // 饮水分析
             if (todayLog.water !== undefined && todayLog.water < 6) {
                 insights.push({
                     icon: '💧',
@@ -2301,10 +2318,10 @@ const AI = {
             });
         }
 
-        
+        // 3. 语音心情日记分析
         if (todayLog && todayLog.voiceText) {
             const voiceText = todayLog.voiceText;
-            
+            // 检查语音文本中的情绪信号
             const negativeWords = ['烦', '累', '难过', '焦虑', '哭', '孤独', '压力', '不舒服', '低落'];
             const positiveWords = ['开心', '快乐', '好', '不错', '满意', '充满', '元气'];
             const hasNegative = negativeWords.some(w => voiceText.includes(w));
@@ -2323,7 +2340,7 @@ const AI = {
             }
         }
 
-        
+        // 3. 周期规律性分析
         if (data.periods.length >= 2) {
             const regularity = CycleUtils.getRegularity(data.periods);
             if (regularity && regularity.level === 'poor') {
@@ -2334,11 +2351,11 @@ const AI = {
             }
         }
 
-        
+        // 限制返回3条
         return insights.slice(0, 3);
     },
 
-    
+    // ===== 生成今日贴士 =====
     generateTips(data) {
         const tips = [];
         const today = DB.today();
@@ -2375,18 +2392,18 @@ const AI = {
         };
 
         const phaseTipList = phaseTips[phase] || phaseTips.luteal;
-        
+        // 随机返回2条
         const shuffled = [...phaseTipList].sort(() => Math.random() - 0.5);
         return shuffled.slice(0, 2);
     },
 
-    
+    // ===== 生成统计页分析概览 =====
     generateAnalysis(data) {
         const today = DB.today();
         const profile = data.profile;
         const items = [];
 
-        
+        // 当前阶段
         if (profile.lastPeriodStart) {
             const cycleDay = CycleUtils.getCurrentCycleDay(profile.lastPeriodStart, today);
             const phase = CycleUtils.getPhase(cycleDay, profile.cycleLength, profile.periodLength);
@@ -2397,7 +2414,7 @@ const AI = {
             });
         }
 
-        
+        // 近7天平均情绪
         const recentMoods = this.getRecentMoods(data, 7);
         if (recentMoods.length > 0) {
             const moodScore = this.calculateMoodScore(recentMoods);
@@ -2408,7 +2425,7 @@ const AI = {
             });
         }
 
-        
+        // 近7天平均睡眠
         const recentSleep = this.getRecentSleep(data, 7);
         if (recentSleep.length > 0) {
             const avgSleep = recentSleep.reduce((a, b) => a + b, 0) / recentSleep.length;
@@ -2419,7 +2436,7 @@ const AI = {
             });
         }
 
-        
+        // 高频症状
         const topSymptom = this.getTopSymptom(data, 30);
         if (topSymptom) {
             items.push({
@@ -2432,7 +2449,7 @@ const AI = {
         return items;
     },
 
-    
+    // ===== 辅助方法 =====
     getRecentMoods(data, days) {
         const moods = [];
         for (let i = 0; i < days; i++) {
@@ -2479,20 +2496,20 @@ const AI = {
         return { name: sorted[0][0], count: sorted[0][1] };
     },
 
-    
+    // ===== 对话式问答引擎 =====
     answer(question, data) {
         const q = question.toLowerCase().replace(/\s/g, '');
         const profile = data.profile;
         const today = DB.today();
 
-        
+        // 获取当前阶段信息
         let cycleDay = null, phase = null;
         if (profile.lastPeriodStart) {
             cycleDay = CycleUtils.getCurrentCycleDay(profile.lastPeriodStart, today);
             phase = CycleUtils.getPhase(cycleDay, profile.cycleLength, profile.periodLength);
         }
 
-        
+        // === 周期阶段类问题 ===
         if (q.match(/阶段|什么期|周期.*天|现在.*第/)) {
             if (!profile.lastPeriodStart) {
                 return '请先在「我的」页面设置你的周期信息（最近一次经期开始日期），这样我才能为你分析当前所处的阶段哦~';
@@ -2513,7 +2530,7 @@ const AI = {
             return response;
         }
 
-        
+        // === 痛经类问题 ===
         if (q.match(/痛经|疼|痛|经血.*多|月经.*不适|cramp/)) {
             let response = '关于痛经，这里有一些缓解方法：\n\n';
             response += '🔥 保暖：腹部热敷是最有效的方法之一，可以使用热水袋、暖宫贴\n';
@@ -2522,7 +2539,7 @@ const AI = {
             response += '💊 止痛：必要时可服用布洛芬等非甾体消炎药（请遵医嘱）\n';
             response += '💆 按摩：轻柔按摩下腹部和腰部\n\n';
 
-            
+            // 个性化建议
             const recentSymptoms = [];
             for (let i = 0; i < 30; i++) {
                 const log = data.dailyLogs[DB.offsetDate(-i)];
@@ -2544,7 +2561,7 @@ const AI = {
             return response;
         }
 
-        
+        // === 情绪类问题 ===
         if (q.match(/情绪|心情|烦躁|焦虑|低落|哭|易怒|pms|经前.*情绪/)) {
             let response = '';
             const recentMoods = this.getRecentMoods(data, 14);
@@ -2574,7 +2591,7 @@ const AI = {
             return response;
         }
 
-        
+        // === 运动类问题 ===
         if (q.match(/运动|锻炼|健身|跑步|瑜伽/)) {
             if (!phase) return '请先设置周期信息，我会根据你的周期阶段给出运动建议~';
 
@@ -2587,22 +2604,22 @@ const AI = {
             return exerciseAdvice[phase];
         }
 
-        
+        // === 养雌类问题 ===
         if (q.match(/养雌|雌激素|激素.*平衡|平衡.*激素/)) {
             return this.generateEstrogenResponse();
         }
 
-        
+        // === 备孕类问题 ===
         if (q.match(/备孕|怀孕|受孕|孕前|排卵.*追踪|追踪.*排卵|叶酸/)) {
             return this.generatePregnancyPrepResponse(data);
         }
 
-        
+        // === 周期护理类问题 ===
         if (q.match(/护理|保养|怎么.* care|阶段.*注意|经.*护理/)) {
             return this.generatePhaseCareResponse(phase);
         }
 
-        
+        // === 饮食类问题 ===
         if (q.match(/饮食|吃|食物|营养|补/)) {
             if (q.match(/抗炎|炎症|anti.*inflam/)) {
                 return this.generateAntiInflammatoryResponse();
@@ -2621,7 +2638,7 @@ const AI = {
             return dietAdvice[phase];
         }
 
-        
+        // === 周期规律分析 ===
         if (q.match(/规律|分析.*周期|周期.*分析|正常吗|周期.*正常/)) {
             if (data.periods.length === 0) {
                 return '你还没有记录过经期数据。请在「记录」页面标记经期开始日期，积累数据后我可以帮你分析周期规律~';
@@ -2655,7 +2672,7 @@ const AI = {
             return response;
         }
 
-        
+        // === 经前综合征 ===
         if (q.match(/经前|pms|综合征|经前.*不适/)) {
             let response = '经前综合征（PMS）是指在月经来潮前1-2周出现的一系列身心不适症状。\n\n';
             response += '📌 常见症状：\n';
@@ -2673,7 +2690,7 @@ const AI = {
             return response;
         }
 
-        
+        // === 睡眠类 ===
         if (q.match(/睡眠|睡不着|失眠|睡不好/)) {
             const recentSleep = this.getRecentSleep(data, 7);
             let response = '';
@@ -2699,7 +2716,7 @@ const AI = {
             return response;
         }
 
-        
+        // === 排卵/受孕 ===
         if (q.match(/排卵|受孕|怀孕|备孕|安全期/)) {
             let response = '';
             if (cycleDay) {
@@ -2724,7 +2741,7 @@ const AI = {
             return response;
         }
 
-        
+        // === 水肿/体重 ===
         if (q.match(/水肿|体重|胖了|发胖|water|retention/)) {
             let response = '经期前后体重增加是常见现象，不用担心！\n\n';
             response += '📊 原因：\n';
@@ -2741,7 +2758,7 @@ const AI = {
             return response;
         }
 
-        
+        // === 默认回复 ===
         let response = '这是一个很好的问题！我可以帮你解答以下方面的问题：\n\n';
         response += '✦ 周期阶段与注意事项\n';
         response += '🩸 痛经缓解方法\n';
@@ -2758,7 +2775,7 @@ const AI = {
         return response;
     },
 
-    
+    // ===== 养雌回复 =====
     generateEstrogenResponse() {
         let response = '✦ 养雌指南 — 维持雌激素健康平衡\n\n';
         response += '养雌不是吃补品，而是通过生活方式让身体自然分泌正常水平的雌激素。\n\n';
@@ -2778,7 +2795,7 @@ const AI = {
         return response;
     },
 
-    
+    // ===== 备孕回复 =====
     generatePregnancyPrepResponse(data) {
         let response = '💕 备孕指南 — 科学迎接新生命\n\n';
         response += '📅 备孕时间线：\n';
@@ -2810,7 +2827,7 @@ const AI = {
         return response;
     },
 
-    
+    // ===== 周期阶段护理回复 =====
     generatePhaseCareResponse(phase) {
         if (!phase) {
             return '请先设置周期信息，我会根据你的当前阶段给出针对性的护理建议~';
@@ -2851,7 +2868,7 @@ const AI = {
         return careAdvice[phase] || '保持规律作息和健康饮食是最好的周期护理~';
     },
 
-    
+    // ===== 抗炎饮食回复 =====
     generateAntiInflammatoryResponse() {
         const d = HealthReminders.ANTI_INFLAMMATORY_DIET;
         let response = `${d.icon} ${d.title}\n\n${d.intro}\n\n`;
@@ -2869,7 +2886,7 @@ const AI = {
         return response;
     },
 
-    
+    // ===== 无麸质饮食回复 =====
     generateGlutenFreeResponse(data) {
         const d = HealthReminders.GLUTEN_FREE_DIET;
         let response = `${d.icon} ${d.title}\n\n${d.intro}\n\n`;
@@ -2886,7 +2903,7 @@ const AI = {
         response += '\n💡 实用建议：\n';
         d.tips.forEach(t => response += `• ${t}\n`);
 
-        
+        // 个性化建议
         let crampCount = 0;
         for (let i = 0; i < 30; i++) {
             const log = data.dailyLogs[DB.offsetDate(-i)];
@@ -2900,13 +2917,13 @@ const AI = {
     },
 };
 
-
+// ===== 生活总结生成 =====
 AI.generateLifestyleSummary = function(appData) {
     var profile = appData.profile;
     var today = DB.today();
     var nickname = profile.nickname || '你好';
 
-    
+    // 收集最近7天的数据
     var logs = [];
     var d = new Date(DB.parseDate(today));
     for (var i = 0; i < 7; i++) {
@@ -2917,7 +2934,7 @@ AI.generateLifestyleSummary = function(appData) {
 
     var parts = [];
 
-    
+    // 周期阶段
     if (profile.lastPeriodStart) {
         var cycleDay = CycleUtils.getCurrentCycleDay(profile.lastPeriodStart, today);
         var phase = CycleUtils.getPhase(cycleDay, profile.cycleLength, profile.periodLength);
@@ -2925,19 +2942,19 @@ AI.generateLifestyleSummary = function(appData) {
         parts.push('你现在处于<b>' + phaseInfo.name + '</b>，' + phaseInfo.desc);
     }
 
-    
+    // 记录天数
     var totalLogDays = Object.keys(appData.dailyLogs || {}).length;
     if (totalLogDays > 0) {
         parts.push('已记录<b>' + totalLogDays + '</b>天的生活习惯');
     }
 
-    
+    // 运动统计
     var exerciseDays = logs.filter(function(l) { return l.log.exercise && l.log.exercise.type && l.log.exercise.type !== '未运动'; }).length;
     if (exerciseDays >= 4) parts.push('🏃 运动方面表现很棒，近7天有' + exerciseDays + '天在坚持运动');
     else if (exerciseDays > 0) parts.push('🏃 近7天运动' + exerciseDays + '天，还可以继续加油哦');
     else parts.push('🏃 最近一周好像没有运动记录，试试简单的抗阻训练吧');
 
-    
+    // 情绪分析
     var moods = { happy: 0, calm: 0, anxious: 0, sad: 0, irritable: 0, tired: 0, energetic: 0 };
     logs.forEach(function(l) {
         (l.log.mood || []).forEach(function(m) { if (moods[m] !== undefined) moods[m]++; });
@@ -2947,18 +2964,18 @@ AI.generateLifestyleSummary = function(appData) {
     if (goodMoods > badMoods) parts.push('😊 最近情绪整体不错，积极情绪居多');
     else if (badMoods > 0) parts.push('🤗 最近情绪有些波动，多给自己一些关爱');
 
-    
+    // 饮水
     var totalWater = 0, waterDays = 0;
     logs.forEach(function(l) { if (l.log.water) { totalWater += l.log.water; waterDays++; } });
     if (waterDays >= 5 && totalWater / waterDays >= 1200) parts.push('💧 饮水习惯很好，继续保持');
     else if (waterDays > 0) parts.push('💧 饮水量可以适当增加，每天1600ml对代谢更好');
 
-    
+    // 经期
     if (profile.cycleLength && profile.lastPeriodStart) {
         var periodCount = appData.periods.filter(function(p) { return p.startDate !== p.endDate; }).length;
         if (periodCount >= 2) parts.push('📅 已记录' + periodCount + '次完整经期，周期' + profile.cycleLength + '天');
 
-        
+        // 精度提示
         var months = getRecordMonths(appData.periods.filter(function(p) { return p.startDate !== p.endDate; }));
         if (months < 3) parts.push('📝 持续记录达3个月后经期预测会更准确哦');
         else if (months < 6) parts.push('📊 记录已达标准精度，距黄金标准（6个月）还有' + (6-months) + '个月');
@@ -2970,10 +2987,13 @@ AI.generateLifestyleSummary = function(appData) {
     return '嘿 ' + nickname + '，我来帮你回顾一下近期状态 🌙<br><br>' + greeting + '<br><br>有什么想问的，直接告诉我吧 💬';
 };
 
- 
+/* ========================================
+   LUNA — 健康提醒与推荐引擎
+   基于用户记录生成个性化健康提醒
+   ======================================== */
 
 const HealthReminders = {
-    
+    // ===== 简单抗阻训练库 =====
     RESISTANCE_EXERCISES: {
         beginner: [
             { name: '靠墙深蹲', desc: '背靠墙壁，缓慢下蹲至大腿与地面平行，保持30秒', reps: '3组×30秒', target: '腿部+臀部', icon: '🦵' },
@@ -2991,7 +3011,7 @@ const HealthReminders = {
         ],
     },
 
-    
+    // ===== 抗炎饮食推荐 =====
     ANTI_INFLAMMATORY_DIET: {
         title: '抗炎饮食推荐',
         icon: '🫐',
@@ -3024,7 +3044,7 @@ const HealthReminders = {
         ],
     },
 
-    
+    // ===== 无麸质饮食推荐（针对生理问题） =====
     GLUTEN_FREE_DIET: {
         title: '无麸质饮食推荐',
         icon: '🌾',
@@ -3059,13 +3079,13 @@ const HealthReminders = {
         ],
     },
 
-    
+    // ===== 生成健康提醒 =====
     generateReminders(data) {
         const reminders = [];
         const today = DB.today();
         const profile = data.profile;
 
-        
+        // 检查最近记录
         let noExerciseDays = 0;
         let poorSleepDays = 0;
         let lowWaterDays = 0;
@@ -3079,28 +3099,28 @@ const HealthReminders = {
             const log = data.dailyLogs[date];
 
             if (log) {
-                
+                // 运动检查
                 if (!log.exercise || !log.exercise.type || log.exercise.duration === 0) {
                     noExerciseDays++;
                 } else {
                     if (!lastExerciseDate) lastExerciseDate = date;
-                    noExerciseDays = 0; 
+                    noExerciseDays = 0; // 重置连续未运动天数
                 }
 
-                
+                // 睡眠检查
                 if (log.sleep && log.sleep.hours < 6) poorSleepDays++;
                 if (log.sleep && log.sleep.quality === 'poor') poorSleepDays++;
 
-                
+                // 饮水检查
                 if (log.water !== undefined && log.water < 6) lowWaterDays++;
 
-                
+                // 垃圾食品检查
                 if (log.diet && log.diet.tags && log.diet.tags.includes('junk')) junkFoodDays++;
 
-                
+                // 咖啡因检查
                 if (log.diet && log.diet.tags && log.diet.tags.includes('caffeine')) totalCaffeine++;
 
-                
+                // 严重症状检查
                 if (log.symptoms) {
                     if (log.symptoms.includes('cramps') || log.symptoms.includes('nausea') || log.symptoms.includes('dizziness')) {
                         hasSevereSymptoms = true;
@@ -3109,7 +3129,7 @@ const HealthReminders = {
             }
         }
 
-        
+        // 1. 运动提醒
         if (noExerciseDays >= 3) {
             const level = noExerciseDays >= 7 ? 'beginner' : 'beginner';
             const exercises = this.RESISTANCE_EXERCISES[level];
@@ -3127,7 +3147,7 @@ const HealthReminders = {
             });
         }
 
-        
+        // 2. 睡眠提醒
         if (poorSleepDays >= 3) {
             reminders.push({
                 type: 'sleep',
@@ -3140,7 +3160,7 @@ const HealthReminders = {
             });
         }
 
-        
+        // 3. 饮水提醒
         if (lowWaterDays >= 5) {
             reminders.push({
                 type: 'water',
@@ -3153,7 +3173,7 @@ const HealthReminders = {
             });
         }
 
-        
+        // 4. 抗炎饮食推荐
         if (junkFoodDays >= 3 || hasSevereSymptoms) {
             reminders.push({
                 type: 'diet_anti_inflammatory',
@@ -3169,9 +3189,9 @@ const HealthReminders = {
             });
         }
 
-        
+        // 5. 无麸质饮食推荐（针对严重症状）
         if (hasSevereSymptoms) {
-            
+            // 检查症状频率
             let severeCount = 0;
             for (let i = 0; i < 30; i++) {
                 const log = data.dailyLogs[DB.offsetDate(-i)];
@@ -3191,7 +3211,7 @@ const HealthReminders = {
             }
         }
 
-        
+        // 6. 咖啡因提醒
         if (totalCaffeine >= 5) {
             const phase = profile.lastPeriodStart
                 ? CycleUtils.getPhase(
@@ -3212,7 +3232,7 @@ const HealthReminders = {
             }
         }
 
-        
+        // 7. 周期阶段提醒
         if (profile.lastPeriodStart) {
             const cycleDay = CycleUtils.getCurrentCycleDay(profile.lastPeriodStart, today);
             const phase = CycleUtils.getPhase(cycleDay, profile.cycleLength, profile.periodLength);
@@ -3231,14 +3251,14 @@ const HealthReminders = {
             }
         }
 
-        
+        // 按优先级排序
         const priorityOrder = { high: 0, medium: 1, low: 2 };
         reminders.sort((a, b) => (priorityOrder[a.priority] || 3) - (priorityOrder[b.priority] || 3));
 
         return reminders;
     },
 
-    
+    // 获取今日运动推荐
     getExerciseRecommendation(data) {
         const profile = data.profile;
         if (!profile.lastPeriodStart) {
@@ -3249,7 +3269,7 @@ const HealthReminders = {
         const phase = CycleUtils.getPhase(cycleDay, profile.cycleLength, profile.periodLength);
 
         if (phase === 'menstrual') {
-            
+            // 经期推荐轻柔动作
             return this.RESISTANCE_EXERCISES.beginner.slice(0, 3);
         } else if (phase === 'luteal') {
             return this.RESISTANCE_EXERCISES.beginner;
@@ -3259,10 +3279,13 @@ const HealthReminders = {
     },
 };
 
- 
+/* ========================================
+   LUNA — 女性成长专栏
+   提供女性成长相关的话题与解决思路
+   ======================================== */
 
 const GrowthContent = {
-    
+    // 成长专栏主题列表
     TOPICS: [
         {
             id: 'awakening30',
@@ -3446,33 +3469,33 @@ const GrowthContent = {
         },
     ],
 
-    
+    // 获取所有主题
     getAll() {
         return this.TOPICS;
     },
 
-    
+    // 按ID获取主题
     getById(id) {
         return this.TOPICS.find(t => t.id === id);
     },
 
-    
+    // 按标签筛选
     getByTag(tag) {
         return this.TOPICS.filter(t => t.tag === tag);
     },
 
-    
+    // 获取所有标签
     getAllTags() {
         return [...new Set(this.TOPICS.map(t => t.tag))];
     },
 };
 
-
-
+// ===== 女性交流社区模块 =====
+// 参考 MindBack 模式：语音日记 + 公开/私密切换 + 社区Feed
 
 const Community = {
 
-  
+  // 预置社区内容种子（模拟真实社区的温暖氛围）
   SEED_ENTRIES: [
     {
       id: 'seed_1',
@@ -3564,20 +3587,20 @@ const Community = {
     }
   ],
 
-  
+  // 获取社区Feed（预置内容 + 用户发布的公开日记）
   getFeed(userData) {
     let feed = [...this.SEED_ENTRIES];
     
-    
+    // 加入用户发布的公开日记
     const diaries = userData.communityDiaries || [];
     const publicDiaries = diaries.filter(d => d.isPublic);
     feed = [...publicDiaries, ...feed];
     
-    
+    // 按日期降序排序
     feed.sort((a, b) => {
       if (a.date > b.date) return -1;
       if (a.date < b.date) return 1;
-      
+      // 种子内容优先显示在用户内容后面
       if (a.id.startsWith('seed_') && !b.id.startsWith('seed_')) return 1;
       if (!a.id.startsWith('seed_') && b.id.startsWith('seed_')) return -1;
       return b.likes - a.likes;
@@ -3586,13 +3609,13 @@ const Community = {
     return feed;
   },
 
-  
+  // 获取用户私人日记
   getPrivateDiaries(userData) {
     const diaries = userData.communityDiaries || [];
     return diaries.filter(d => !d.isPublic).sort((a, b) => b.date.localeCompare(a.date));
   },
 
-  
+  // 创建新日记
   createDiary(userData, { voiceText, mood, moodLabel, tags, isPublic, date }) {
     if (!userData.communityDiaries) userData.communityDiaries = [];
     userData.communityDiaries.unshift({
@@ -3612,7 +3635,7 @@ const Community = {
     return userData;
   },
 
-  
+  // 添加评论
   addComment(entry, author, avatar, text) {
     if (!entry.comments) entry.comments = [];
     entry.comments.push({
@@ -3624,29 +3647,29 @@ const Community = {
     });
   },
 
-  
+  // 切换点赞
   toggleLike(entry, userId) {
     if (!entry.likedBy) entry.likedBy = [];
     const idx = entry.likedBy.indexOf(userId);
     if (idx >= 0) {
       entry.likedBy.splice(idx, 1);
       entry.likes = Math.max(0, entry.likes - 1);
-      return false; 
+      return false; // unliked
     } else {
       entry.likedBy.push(userId);
       entry.likes += 1;
-      return true; 
+      return true; // liked
     }
   },
 
-  
+  // 标签列表
   TOPIC_TAGS: [
     '痛经', 'PMS', '备孕', '养雌', 'PCOS', '情绪',
     '30岁觉醒', '原生家庭', '自我成长', '围绝经期',
     '运动', '饮食', '中医调理', '经期护理', '日常碎碎念'
   ],
 
-  
+  // 根据mood获取推荐标签
   getSuggestedTags(mood) {
     const moodTagMap = {
       happy: ['日常碎碎念', '自我成长'],
@@ -3662,12 +3685,15 @@ const Community = {
   }
 };
 
- 
+/* ========================================
+   LUNA — 统计图表模块
+   使用 Chart.js 渲染数据可视化
+   ======================================== */
 
 const Charts = {
     instances: {},
 
-    
+    // 销毁已有图表
     destroy(chartId) {
         if (this.instances[chartId]) {
             this.instances[chartId].destroy();
@@ -3675,19 +3701,19 @@ const Charts = {
         }
     },
 
-    
+    // 销毁所有图表
     destroyAll() {
         Object.keys(this.instances).forEach(id => this.destroy(id));
     },
 
-    
+    // ===== 周期历史图 =====
     renderCycleHistory(data) {
         const canvas = document.getElementById('cycleHistoryChart');
         if (!canvas) return;
 
         this.destroy('cycleHistory');
         const history = CycleUtils.getPeriodHistory(data.periods);
-        history.reverse(); 
+        history.reverse(); // 按时间正序
 
         if (history.length === 0) {
             this.renderEmpty(canvas, '暂无周期数据');
@@ -3743,7 +3769,7 @@ const Charts = {
         });
     },
 
-    
+    // ===== 症状频率图 =====
     renderSymptomChart(data) {
         const canvas = document.getElementById('symptomChart');
         if (!canvas) return;
@@ -3800,7 +3826,7 @@ const Charts = {
         });
     },
 
-    
+    // ===== 情绪趋势图 =====
     renderMoodChart(data) {
         const canvas = document.getElementById('moodChart');
         if (!canvas) return;
@@ -3810,7 +3836,7 @@ const Charts = {
         const labels = [];
         const moodScores = [];
 
-        
+        // 情绪评分映射
         const scoreMap = {
             energetic: 5, happy: 4, calm: 3, sensitive: 2, tired: 2,
             irritable: 1, anxious: 1, sad: 0,
@@ -3884,7 +3910,7 @@ const Charts = {
         });
     },
 
-    
+    // ===== 周期阶段-症状相关性图 =====
     renderCorrelationChart(data) {
         const canvas = document.getElementById('correlationChart');
         if (!canvas) return;
@@ -3897,7 +3923,7 @@ const Charts = {
             return;
         }
 
-        
+        // 统计各阶段的症状出现次数
         const phaseSymptoms = {
             menstrual: {},
             follicular: {},
@@ -3916,7 +3942,7 @@ const Charts = {
             });
         });
 
-        
+        // 取所有症状的并集，按频率排序取前6
         const allSymptoms = {};
         Object.values(phaseSymptoms).forEach(phase => {
             Object.entries(phase).forEach(([s, c]) => {
@@ -3984,7 +4010,7 @@ const Charts = {
         });
     },
 
-    
+    // ===== 空状态 =====
     renderEmpty(canvas, text) {
         const ctx = canvas.getContext('2d');
         canvas.height = 120;
@@ -3996,7 +4022,7 @@ const Charts = {
         ctx.fillText('📊', canvas.width / 2, 40);
     },
 
-    
+    // ===== 渲染所有图表 =====
     renderAll(data) {
         setTimeout(() => {
             this.renderCycleHistory(data);
@@ -4007,9 +4033,13 @@ const Charts = {
     },
 };
 
- 
+/* ========================================
+   LUNA — 主应用逻辑 V3.5
+   页面路由、UI渲染、交互处理
+   新增：新用户引导、女性交流社区（语音日记+公开/私密）
+   ======================================== */
 
-
+// 全局状态
 let appData = null;
 let currentLogDate = null;
 let currentLogData = null;
@@ -4025,21 +4055,21 @@ let selectedSleepQuality = null;
 let voiceTranscriptText = '';
 let recognition = null;
 let isRecording = false;
-let currentKbFilter = '推荐';  
+let currentKbFilter = '推荐';  // 知识卡片当前筛选分类
 
-
+// 社区状态
 let communityMood = 'calm';
 let communityTags = [];
 let communityPrivacy = 'public';
 let communityVoiceText = '';
 let isCommunityRecording = false;
 
-
+// 自定义选项存储（会同步保存到appData）
 let customMoods = [];
 let customSymptoms = [];
 let customDietTags = [];
 
-
+// 人生阶段信息
 const LIFE_STAGES = {
     menarche: { label: '初潮期', emoji: '✨', age: '10-14岁', hint: '建立正确的月经观，学会基础护理和记录周期' },
     teen: { label: '青春期', emoji: '⚡', age: '15-19岁', hint: '警惕节食和压力，建立运动习惯，HPV疫苗建议接种' },
@@ -4049,7 +4079,7 @@ const LIFE_STAGES = {
     postmenopause: { label: '绝经后', emoji: '🌲', age: '55+', hint: '低雌激素期，重点防骨质疏松和心血管疾病' },
 };
 
-
+// ===== 语音情绪关键词库 =====
 const MOOD_KEYWORDS = {
     happy: ['开心', '快乐', '高兴', '幸福', '愉快', '棒', '好的', '不错', '满意', '兴奋', '喜欢', '美好'],
     calm: ['平静', '放松', '安宁', '舒适', '还好', '一般', '稳定', '正常', '普通'],
@@ -4061,11 +4091,11 @@ const MOOD_KEYWORDS = {
     sensitive: ['敏感', '脆弱', '在意', '委屈', '玻璃心', '容易哭', '情绪化', '多想'],
 };
 
-
+// ===== 初始化 =====
 function init() {
     appData = DB.load();
 
-    
+    // 加载自定义选项
     customMoods = appData.customMoods || [];
     customSymptoms = appData.customSymptoms || [];
     customDietTags = appData.customDietTags || [];
@@ -4083,14 +4113,14 @@ function init() {
 
     try { renderHome(); } catch(e) {}
 
-    
+    // 其他页面延迟渲染，等用户切换时再渲染
     initLogInteractions();
     initChatInput();
 
     document.addEventListener('click', () => {});
 }
 
-
+// ===== 状态栏时间 =====
 function updateStatusTime() {
     const el = document.getElementById('statusTime');
     if (!el) return;
@@ -4100,7 +4130,7 @@ function updateStatusTime() {
     el.textContent = `${h}:${m}`;
 }
 
-
+// ===== 页面切换 =====
 function switchPage(pageName) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const pageEl = document.getElementById('page-' + pageName);
@@ -4132,7 +4162,7 @@ function switchToLog() {
 
 function switchToAI() {
     switchPage('ai');
-    
+    // 进入AI页时自动生成生活总结
     setTimeout(function() {
         const greeting = document.getElementById('aiGreeting');
         if (greeting) {
@@ -4141,12 +4171,12 @@ function switchToAI() {
     }, 200);
 }
 
-
+// ===== 渲染首页 =====
 function renderHome() {
     const profile = appData.profile;
     const today = DB.today();
 
-    
+    // 农历日期 + 公历日期
     const lunarEl = document.getElementById('homeLunarDate');
     if (lunarEl) {
         const now = new Date();
@@ -4156,7 +4186,7 @@ function renderHome() {
         lunarEl.textContent = term ? `${solar} · ${lunar} · ${term}` : `${solar} · ${lunar}`;
     }
 
-    
+    // 人生阶段徽章
     const stageBadge = document.getElementById('homeLifeStageBadge');
     if (stageBadge) {
         const stage = profile.lifeStage;
@@ -4169,7 +4199,7 @@ function renderHome() {
         }
     }
 
-    
+    // 周期看板
     const cycleDayEl = document.getElementById('cycleDay');
     const phaseBadgeInlineEl = document.getElementById('phaseBadgeInline');
     const phaseDescEl = document.getElementById('phaseDesc');
@@ -4205,7 +4235,7 @@ function renderHome() {
             if (nextUnit) nextUnit.textContent = '天';
         }
         
-        
+        // 经期历史精度
         if (nextSub) {
             const periods = appData.periods.filter(p => p.startDate && p.endDate && p.startDate !== p.endDate);
             const months = getRecordMonths(periods);
@@ -4226,23 +4256,23 @@ function renderHome() {
         nextDaysEl.textContent = '--';
     }
 
-    
+    // 生活方式 × 周期关联
     try { renderLifestyleImpact(profile, today); } catch(e) {}
 
-    
+    // 运动示范（无运动记录时展示）
     const todayLogExercise = appData.dailyLogs[today];
     const hasExercise = todayLogExercise && todayLogExercise.exercise && todayLogExercise.exercise.type && todayLogExercise.exercise.type !== '未运动';
     if (!hasExercise) {
         renderExerciseDemos();
     }
 
-    
+    // 健康提醒
     renderReminders();
 
-    
+    // 经期预测
     renderPrediction(profile);
 
-    
+    // AI洞察
     const insights = AI.generateInsights(appData).slice(0, 2);
     const insightBody = document.getElementById('aiInsightBody');
     if (insights.length > 0) {
@@ -4256,7 +4286,7 @@ function renderHome() {
         insightBody.innerHTML = '<div class="insight-item">设置周期信息后，将为你提供个性化健康洞察。</div>';
     }
 
-    
+    // 今日贴士
     const tipsCard = document.getElementById('tipsCard');
     if (tipsCard) {
         try {
@@ -4273,16 +4303,16 @@ function renderHome() {
         } catch(e) {}
     }
 
-    
+    // 知识卡片
     try { renderKnowledgeCards(profile, today); } catch(e) {}
 }
 
-
+// ===== 知识卡片渲染 =====
 function renderKnowledgeCards(profile, today) {
     const carousel = document.getElementById('kbCarousel');
     if (!carousel) return;
 
-    
+    // 获取推荐卡片（根据当前阶段、症状和人生阶段）
     let phase = null;
     let symptoms = [];
     if (profile.lastPeriodStart) {
@@ -4297,7 +4327,7 @@ function renderKnowledgeCards(profile, today) {
     const lifeStage = profile.lifeStage || 'all';
     const recommended = KnowledgeCards.getRecommended(phase, symptoms, lifeStage);
 
-    
+    // 根据筛选分类显示卡片
     let allCards;
     if (currentKbFilter === '推荐') {
         const recIds = recommended.map(c => c.id);
@@ -4308,7 +4338,7 @@ function renderKnowledgeCards(profile, today) {
         allCards = KnowledgeCards.getByCategory(currentKbFilter);
     }
 
-    
+    // 如果有人生阶段，优先展示该阶段相关卡片
     if (lifeStage !== 'all' && currentKbFilter === '推荐') {
         allCards.sort((a, b) => {
             const aMatch = a.stages && (a.stages.includes(lifeStage) || a.stages.includes('all')) ? 0 : 1;
@@ -4334,7 +4364,7 @@ function renderKnowledgeCards(profile, today) {
         </div>
     `).join('');
 
-    
+    // 渲染分类筛选标签
     renderKbFilterTags();
 }
 
@@ -4357,7 +4387,7 @@ function openKnowledgeDetail(id) {
     const card = KnowledgeCards.CARDS.find(c => c.id === id);
     if (!card) return;
 
-    
+    // 移除已存在的弹窗
     const existing = document.getElementById('kbDetailOverlay');
     if (existing) existing.remove();
 
@@ -4405,7 +4435,7 @@ function closeKnowledgeDetail() {
     if (overlay) overlay.remove();
 }
 
-
+// ===== 生活方式 × 周期关联可视化 =====
 function renderLifestyleImpact(profile, today) {
     const liGrid = document.getElementById('liGrid');
     const liPhaseTag = document.getElementById('liPhaseTag');
@@ -4422,7 +4452,7 @@ function renderLifestyleImpact(profile, today) {
         liPhaseTag.textContent = '未设置';
     }
 
-    
+    // 获取今日和近7天数据
     const todayLog = appData.dailyLogs[today] || {};
     const recentLogs = [];
     for (let i = 0; i < 7; i++) {
@@ -4430,10 +4460,10 @@ function renderLifestyleImpact(profile, today) {
         if (appData.dailyLogs[d]) recentLogs.push(appData.dailyLogs[d]);
     }
 
-    
+    // 4个维度：睡眠、运动、饮食、情绪
     const items = [];
 
-    
+    // 睡眠
     let avgSleep = 0;
     let sleepCount = 0;
     recentLogs.forEach(l => {
@@ -4451,7 +4481,7 @@ function renderLifestyleImpact(profile, today) {
         impact: getSleepImpact(phase, sleepStatus),
     });
 
-    
+    // 运动
     let exerciseDays = 0;
     recentLogs.forEach(l => {
         if (l.exercise && l.exercise.type && l.exercise.duration > 0) exerciseDays++;
@@ -4467,7 +4497,7 @@ function renderLifestyleImpact(profile, today) {
         impact: getExerciseImpact(phase, exerciseStatus),
     });
 
-    
+    // 饮食
     const dietTags = todayLog.diet?.tags || [];
     let dietStatus = 'none';
     let dietValue = '未记录';
@@ -4493,7 +4523,7 @@ function renderLifestyleImpact(profile, today) {
         impact: getDietImpact(phase, dietStatus),
     });
 
-    
+    // 情绪
     const moods = todayLog.mood || [];
     let moodStatus = 'none';
     let moodValue = '未记录';
@@ -4532,7 +4562,7 @@ function renderLifestyleImpact(profile, today) {
         ${item.impact ? `<div class="li-item-impact">${item.impact}</div>` : ''}
     `).join('');
 
-    
+    // 总结
     if (phaseInfo) {
         const goodCount = items.filter(i => i.status === 'good').length;
         const poorCount = items.filter(i => i.status === 'poor').length;
@@ -4599,8 +4629,8 @@ function getMoodImpact(phase, status) {
     return '';
 }
 
-
-
+// ===== 抗阻训练打卡 + 积分 =====
+// 各周期阶段推荐运动
 const PHASE_EXERCISES = {
     menstrual: {
         title: '🧘 经期舒缓运动',
@@ -4676,10 +4706,10 @@ const PHASE_EXERCISES = {
     }
 };
 
-
+// 获取当前阶段适用的运动列表
 function getPhaseExercises() {
     const profile = appData.profile;
-    if (!profile.lastPeriodStart) return PHASE_EXERCISES.follicular.items; 
+    if (!profile.lastPeriodStart) return PHASE_EXERCISES.follicular.items; // 默认
     const cycleDay = CycleUtils.getCurrentCycleDay(profile.lastPeriodStart, DB.today());
     const phase = CycleUtils.getPhase(cycleDay, profile.cycleLength, profile.periodLength);
     return PHASE_EXERCISES[phase] ? PHASE_EXERCISES[phase] : PHASE_EXERCISES.follicular;
@@ -4728,7 +4758,7 @@ function toggleExerciseSet(exId, setIdx) {
         state.completed[exId][key] = true;
     }
     
-    
+    // 检查是否全部完成
     checkExerciseComplete();
     DB.save(appData);
     renderExerciseDemos();
@@ -4752,7 +4782,7 @@ function checkExerciseComplete() {
         exercises.forEach(ex => points += ex.points);
         state.total = (state.total || 0) + points;
         
-        
+        // 连续打卡
         const today = DB.today();
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -4764,7 +4794,7 @@ function checkExerciseComplete() {
         }
         state.lastDoneDate = today;
         
-        
+        // 记录今日运动
         if (!appData.dailyLogs[today]) appData.dailyLogs[today] = {};
         appData.dailyLogs[today].exercise = { type: '抗阻训练', duration: '全部完成' };
         DB.save(appData);
@@ -4852,7 +4882,7 @@ function getPhaseLifestyleAdvice(phase) {
     return advice[phase] || '';
 }
 
-
+// ===== 健康提醒渲染 =====
 function renderReminders() {
     const reminders = HealthReminders.generateReminders(appData);
     const section = document.getElementById('remindersSection');
@@ -4875,7 +4905,7 @@ function renderReminders() {
         </div>
     `).join('');
 
-    
+    // 存储reminders供action使用
     window._currentReminders = reminders;
 }
 
@@ -4893,7 +4923,7 @@ function openReminderAction(type, idx) {
     }
 }
 
-
+// ===== 经期预测渲染 =====
 function renderPrediction(profile) {
     const section = document.getElementById('predictionSection');
     const list = document.getElementById('predList');
@@ -4911,7 +4941,7 @@ function renderPrediction(profile) {
 
     let html = '';
 
-    
+    // 排卵期预测
     if (ovulation) {
         const daysToOv = DB.daysBetween(DB.today(), ovulation);
         const lunarOv = LunarCalendar.formatLunar(ovulation);
@@ -4927,7 +4957,7 @@ function renderPrediction(profile) {
         `;
     }
 
-    
+    // 受孕窗口
     if (fertility) {
         const fStart = DB.formatDateCN(fertility.start);
         const fEnd = DB.formatDateCN(fertility.end);
@@ -4942,7 +4972,7 @@ function renderPrediction(profile) {
         `;
     }
 
-    
+    // 未来3个月经期预测
     predictions.forEach(p => {
         const days = DB.daysBetween(DB.today(), p.startDate);
         const lunar = LunarCalendar.formatLunar(p.startDate);
@@ -4962,15 +4992,15 @@ function renderPrediction(profile) {
     list.innerHTML = html;
 }
 
-
+// ===== 渲染记录页 =====
 function renderLogPage() {
-    
+    // 日期标题（含农历）
     const logDateText = document.getElementById('logDateText');
     logDateText.textContent = DB.formatDateWithLunar(currentLogDate);
 
     const log = appData.dailyLogs[currentLogDate] || {};
 
-    
+    // 重置选择状态
     selectedMoods = log.mood ? [...log.mood] : [];
     selectedSymptoms = log.symptoms ? [...log.symptoms] : [];
     selectedDietTags = log.diet?.tags ? [...log.diet.tags] : [];
@@ -4978,7 +5008,7 @@ function renderLogPage() {
     selectedFlow = null;
     selectedSleepQuality = log.sleep?.quality || null;
 
-    
+    // 经期标记
     const isPeriodDay = appData.periods.some(p => {
         return p.startDate <= currentLogDate && (!p.endDate || p.endDate >= currentLogDate);
     });
@@ -4990,52 +5020,52 @@ function renderLogPage() {
         selectedFlow = periodEntry.flowLevels[currentLogDate];
     }
     
-    
+    // 经血颜色
     selectedColor = (periodEntry && periodEntry.colors && periodEntry.colors[currentLogDate]) || null;
     document.querySelectorAll('.color-btn').forEach(el => {
         el.classList.toggle('active', el.dataset.color === selectedColor);
     });
     
-    
+    // 痛经程度
     selectedCramp = (periodEntry && periodEntry.cramps && periodEntry.cramps[currentLogDate]) || null;
     document.querySelectorAll('.cramp-btn').forEach(el => {
         el.classList.toggle('active', el.dataset.cramp === selectedCramp);
     });
     
-    
+    // 经期补充说明
     document.getElementById('periodNotes').value = (periodEntry && periodEntry.notes && periodEntry.notes[currentLogDate]) || '';
 
-    
+    // 更新心情选择
     rebuildMoodSelector();
     document.querySelectorAll('.mood-item').forEach(el => {
         el.classList.toggle('active', selectedMoods.includes(el.dataset.mood));
     });
 
-    
+    // 更新精力水平
     document.querySelectorAll('.energy-bar').forEach(el => {
         const level = parseInt(el.dataset.level);
         el.classList.toggle('active', level <= selectedEnergy);
     });
 
-    
+    // 更新症状选择
     rebuildSymptomGrid();
     document.querySelectorAll('.symptom-chip').forEach(el => {
         el.classList.toggle('active', selectedSymptoms.includes(el.dataset.symptom));
     });
 
-    
+    // 更新饮食标签
     rebuildDietTags();
     document.querySelectorAll('.diet-tag').forEach(el => {
         el.classList.toggle('active', selectedDietTags.includes(el.dataset.tag));
     });
 
-    
+    // 饮食输入
     document.getElementById('dietBreakfast').value = log.diet?.breakfast || '';
     document.getElementById('dietLunch').value = log.diet?.lunch || '';
     document.getElementById('dietDinner').value = log.diet?.dinner || '';
     document.getElementById('dietSnack').value = log.diet?.snack || '';
 
-    
+    // 睡眠
     const sleepHours = log.sleep?.hours || 7;
     document.getElementById('sleepHours').value = sleepHours;
     document.getElementById('sleepValue').textContent = sleepHours + 'h';
@@ -5044,18 +5074,18 @@ function renderLogPage() {
         el.classList.toggle('active', el.dataset.q === selectedSleepQuality);
     });
 
-    
+    // 饮水
     waterCount = log.water || 0;
     document.getElementById('waterCount').textContent = waterCount;
 
-    
+    // 运动
     document.getElementById('exerciseType').value = log.exercise?.type || '';
     document.getElementById('exerciseDuration').value = log.exercise?.duration || '';
 
-    
+    // 备注
     document.getElementById('dailyNotes').value = log.notes || '';
 
-    
+    // 语音转录（已移除，仅保留兼容）
     voiceTranscriptText = log.voiceText || '';
     const transcriptEl = document.getElementById('voiceTranscript');
     if (transcriptEl) {
@@ -5073,13 +5103,13 @@ function renderLogPage() {
         }
     }
 
-    
+    // Flow按钮
     document.querySelectorAll('.flow-btn').forEach(el => {
         el.classList.toggle('active', el.dataset.flow === selectedFlow);
     });
 }
 
-
+// ===== 自定义选项管理 =====
 function rebuildMoodSelector() {
     const selector = document.getElementById('moodSelector');
     const presetMoods = [
@@ -5094,13 +5124,13 @@ function rebuildMoodSelector() {
     ];
 
     let html = presetMoods.map(m => `<div class="mood-item" data-mood="${m.key}">${m.emoji}<span>${m.label}</span></div>`).join('');
-    
+    // 自定义情绪
     customMoods.forEach(m => {
         html += `<div class="mood-item custom-item" data-mood="custom_${m}">💭<span>${m}</span></div>`;
     });
     selector.innerHTML = html;
 
-    
+    // 重新绑定事件
     selector.querySelectorAll('.mood-item').forEach(el => {
         el.addEventListener('click', function() {
             const mood = this.dataset.mood;
@@ -5200,7 +5230,7 @@ function addCustomItem(type, input) {
             appData.customMoods = customMoods;
             DB.save(appData);
             rebuildMoodSelector();
-            
+            // 自动选中新添加的
             selectedMoods.push('custom_' + value);
             const el = document.querySelector(`.mood-item[data-mood="custom_${value}"]`);
             if (el) el.classList.add('active');
@@ -5232,7 +5262,7 @@ function addCustomItem(type, input) {
     showToast('已添加自定义选项 ✨');
 }
 
-
+// ===== 记录页交互 =====
 function initLogInteractions() {
     const periodCheck = document.getElementById('isPeriodDay');
     if (!periodCheck) return;
@@ -5246,7 +5276,7 @@ function initLogInteractions() {
         }
     });
 
-    
+    // 经期备注自动保存
     document.getElementById('periodNotes').addEventListener('blur', function() {
         const period = appData.periods.find(p => p.startDate <= currentLogDate && (!p.endDate || p.endDate >= currentLogDate));
         if (period) {
@@ -5265,7 +5295,7 @@ function initLogInteractions() {
         });
     });
 
-    
+    // 精力水平
     document.querySelectorAll('.energy-bar').forEach(el => {
         el.addEventListener('click', function() {
             selectedEnergy = parseInt(this.dataset.level);
@@ -5275,12 +5305,12 @@ function initLogInteractions() {
         });
     });
 
-    
+    // 睡眠滑块
     document.getElementById('sleepHours').addEventListener('input', function() {
         document.getElementById('sleepValue').textContent = this.value + 'h';
     });
 
-    
+    // 睡眠质量
     document.querySelectorAll('.quality-btn').forEach(el => {
         el.addEventListener('click', function() {
             document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
@@ -5290,7 +5320,7 @@ function initLogInteractions() {
     });
 }
 
-
+// ===== 语音识别 =====
 function initVoiceRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -5365,7 +5395,7 @@ function toggleVoiceInput() {
 }
 
 function startRecording() {
-    
+    // 清理旧状态，重新绑定日志页专用回调
     if (recognition) {
         try { recognition.abort(); } catch(e) {}
     }
@@ -5386,7 +5416,7 @@ function startRecording() {
     transcript.innerHTML = '<span class="interim">正在聆听...</span>';
     suggest.style.display = 'none';
 
-    
+    // 重新绑定日志页专用回调
     recognition.onresult = function(event) {
         let finalText = '';
         let interimText = '';
@@ -5444,7 +5474,7 @@ function stopRecording() {
     micBtn.classList.remove('recording');
     micIcon.textContent = '🎤';
 
-    
+    // 捕获屏幕上未完成识别的文字
     if (!voiceTranscriptText) {
         const screenText = transcript.textContent.trim();
         if (screenText && screenText !== '正在聆听...') {
@@ -5507,7 +5537,7 @@ function acceptMoodSuggest(mood) {
     showToast('已添加情绪标签');
 }
 
-
+// ===== 日期切换 =====
 function changeLogDate(delta) {
     if (isRecording) stopRecording();
     if (isCommunityRecording) stopCommunityRecording();
@@ -5518,13 +5548,13 @@ function changeLogDate(delta) {
     renderLogPage();
 }
 
-
+// ===== 饮水调整 =====
 function adjustWater(delta) {
     waterCount = Math.max(0, waterCount + delta * 200);
     document.getElementById('waterCount').textContent = waterCount;
 }
 
-
+// ===== 标记经期 =====
 function markPeriodDay(dateStr) {
     const existing = appData.periods.find(p => p.startDate <= dateStr && (!p.endDate || p.endDate >= dateStr));
     if (existing) return;
@@ -5561,18 +5591,18 @@ function markPeriodDay(dateStr) {
 }
 
 function autoCalcCycleLength() {
-    
+    // 需要至少2个完整周期才能自动计算
     const completedPeriods = appData.periods.filter(p => p.startDate !== p.endDate && p.startDate);
     if (completedPeriods.length < 2) return;
     
-    
+    // 按开始日期排序
     const sorted = completedPeriods.sort((a, b) => a.startDate.localeCompare(b.startDate));
     let totalDays = 0;
     let count = 0;
     
     for (let i = 1; i < sorted.length; i++) {
         const days = DB.daysBetween(sorted[i - 1].startDate, sorted[i].startDate);
-        if (days >= 21 && days <= 45) { 
+        if (days >= 21 && days <= 45) { // 排除异常值
             totalDays += days;
             count++;
         }
@@ -5582,7 +5612,7 @@ function autoCalcCycleLength() {
         const avgCycle = Math.round(totalDays / count);
         if (avgCycle !== appData.profile.cycleLength) {
             appData.profile.cycleLength = avgCycle;
-            appData.profile._autoCycle = true; 
+            appData.profile._autoCycle = true; // 标记为自动计算
             DB.save(appData);
         }
     }
@@ -5670,7 +5700,7 @@ function togglePeriodDetail() {
     }
 }
 
-
+// ===== 保存每日记录 =====
 function saveDailyLog() {
     const log = {
         mood: selectedMoods,
@@ -5703,7 +5733,7 @@ function saveDailyLog() {
     renderHome();
 }
 
-
+// ===== 渲染AI页面 =====
 function renderAIPage() {
     const analysisItems = AI.generateAnalysis(appData);
     const grid = document.getElementById('analysisGrid');
@@ -5721,7 +5751,7 @@ function renderAIPage() {
     }
 }
 
-
+// ===== 聊天功能 =====
 function initChatInput() {
     const input = document.getElementById('chatInput');
     if (input) {
@@ -5796,10 +5826,10 @@ function removeTyping() {
     if (typing) typing.remove();
 }
 
-
+// ===== 女性交流社区 =====
 function renderCommunityPage() {
     try {
-    
+    // ===== 1. 成长话题横滑卡片（顶部） =====
     const topics = GrowthContent.getAll();
     const ctScroll = document.getElementById('ctScroll');
     if (ctScroll) {
@@ -5811,7 +5841,7 @@ function renderCommunityPage() {
         `).join('');
     }
 
-    
+    // ===== 2. 社区 Feed =====
     const feed = Community.getFeed(appData);
     const feedEl = document.getElementById('communityFeed');
     const myAvatar = appData.profile?.avatar || '✦';
@@ -5878,7 +5908,7 @@ function renderCommunityPage() {
         `;
     }).join('');
     
-    
+    // 头像设置在 feed 上方
     if (!document.getElementById('myAvatarBar')) {
         const bar = document.createElement('div');
         bar.id = 'myAvatarBar';
@@ -5898,7 +5928,7 @@ function openCommunityWrite() {
     communityVoiceText = '';
     isCommunityRecording = false;
 
-    
+    // 重置UI
     document.querySelectorAll('.cw-mood').forEach(el => el.classList.remove('active'));
     const defaultMood = document.querySelector('.cw-mood[data-mood="calm"]');
     if (defaultMood) defaultMood.classList.add('active');
@@ -5913,16 +5943,16 @@ function openCommunityWrite() {
     document.getElementById('cwMicBtn').classList.remove('recording');
     document.getElementById('cwMicIcon').textContent = '🎤';
 
-    
+    // 渲染标签
     renderCommunityTags();
 
-    
+    // 设置标签选择事件
     document.querySelectorAll('.cw-mood').forEach(el => {
         el.onclick = function() {
             document.querySelectorAll('.cw-mood').forEach(e => e.classList.remove('active'));
             this.classList.add('active');
             communityMood = this.dataset.mood;
-            
+            // 根据情绪推荐标签
             communityTags = Community.getSuggestedTags(communityMood);
             renderCommunityTags();
         };
@@ -5981,7 +6011,7 @@ function toggleCommunityVoice() {
 }
 
 function startCommunityRecording() {
-    
+    // 确保之前的状态被清理
     if (recognition) {
         try { recognition.abort(); } catch(e) {}
     }
@@ -6000,7 +6030,7 @@ function startCommunityRecording() {
     transcript.textContent = '';
     transcript.innerHTML = '<span class="interim">正在聆听...</span>';
 
-    
+    // 重设recognition回调用于社区
     recognition.onresult = function(event) {
         let finalText = '';
         let interimText = '';
@@ -6046,7 +6076,7 @@ function stopCommunityRecording() {
     document.getElementById('cwMicBtn').classList.remove('recording');
     document.getElementById('cwMicIcon').textContent = '🎤';
     
-    
+    // 捕获暂存区中未被识别为最终结果的文字
     const transcriptText = document.getElementById('cwTranscript').textContent.trim();
     if (!communityVoiceText && transcriptText && transcriptText !== '正在聆听...') {
         communityVoiceText = transcriptText;
@@ -6159,7 +6189,7 @@ function submitComment(id) {
     renderCommunityPage();
 }
 
-
+// 评论图片上传
 let commentImages = {};
 function uploadCommentImage(entryId) {
     const inp = document.createElement('input');
@@ -6201,7 +6231,7 @@ function clearCommentImage(entryId) {
     if (preview) preview.style.display = 'none';
 }
 
-
+// 评论语音输入
 let commentRecognition = null;
 let isCommentRecording = false;
 let currentCommentEntryId = null;
@@ -6303,7 +6333,7 @@ function showAvatarPreview(dataUrl) {
     const area = overlay.querySelector('#avatarCropArea');
     const img = overlay.querySelector('#avatarPreviewImg');
 
-    
+    // ===== 单指拖拽 =====
     let dragging = false, dragStartX, dragStartY, origTX, origTY;
     
     function onPointerDown(e) {
@@ -6333,7 +6363,7 @@ function showAvatarPreview(dataUrl) {
     area.addEventListener('pointerup', onPointerUp);
     area.addEventListener('pointercancel', onPointerUp);
 
-    
+    // ===== 双指缩放 =====
     let pinchBase = 0, pinchStartScale = 1;
     
     overlay.addEventListener('touchstart', function(e) {
@@ -6354,7 +6384,7 @@ function showAvatarPreview(dataUrl) {
                 e.touches[0].clientX - e.touches[1].clientX,
                 e.touches[0].clientY - e.touches[1].clientY
             );
-            
+            // 相对缩放：距离变远=放大，距离变近=缩小
             const ratio = dist / pinchBase;
             avatarScale = Math.max(0.6, Math.min(3.5, pinchStartScale * ratio));
             applyTransform();
@@ -6384,7 +6414,7 @@ function confirmAvatar(dataUrl) {
         ctx.beginPath();
         ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
         ctx.clip();
-        
+        // 从中间裁剪
         const sx = Math.max(0, (img.width - img.height) / 2);
         const sy = Math.max(0, (img.height - img.width) / 2);
         const s = Math.min(img.width, img.height);
@@ -6405,7 +6435,7 @@ function confirmAvatar(dataUrl) {
     img.src = dataUrl;
 }
 
-
+// ===== 成长话题详情 =====
 function openGrowthDetail(id) {
     const topic = GrowthContent.getById(id);
     if (!topic) return;
@@ -6435,7 +6465,7 @@ function closeGrowthDetail() {
     document.getElementById('growthDetailOverlay').style.display = 'none';
 }
 
-
+// ===== 饮食详情弹窗 =====
 function openDietDetail(dietData) {
     const body = document.getElementById('dietDetailBody');
     let html = `
@@ -6499,7 +6529,7 @@ function closeDietDetail() {
     document.getElementById('dietDetailOverlay').style.display = 'none';
 }
 
-
+// ===== 运动推荐弹窗 =====
 function openExerciseDetail(exercises, title) {
     const body = document.getElementById('exerciseDetailBody');
     body.innerHTML = `
@@ -6540,7 +6570,7 @@ function closeExerciseDetail() {
     document.getElementById('exerciseDetailOverlay').style.display = 'none';
 }
 
-
+// ===== 渲染统计页 =====
 function renderStatsPage() {
     const profile = appData.profile;
 
@@ -6554,11 +6584,11 @@ function renderStatsPage() {
     Charts.renderAll(appData);
 }
 
-
+// ===== 渲染个人中心 =====
 function renderProfilePage() {
     const profile = appData.profile;
 
-    
+    // 更新头像
     const avatarEl = document.querySelector('.profile-avatar');
     if (avatarEl && profile.avatar) {
         if (profile.avatar.startsWith('data:')) {
@@ -6575,7 +6605,7 @@ function renderProfilePage() {
 
     document.getElementById('setCycleLength').value = profile.cycleLength || 28;
     
-    
+    // 显示自动计算标签
     const cycleRow = document.getElementById('setCycleLength').closest('.setting-row');
     if (cycleRow) {
         const label = cycleRow.querySelector('label');
@@ -6588,14 +6618,14 @@ function renderProfilePage() {
     document.getElementById('setLifeStage').value = profile.lifeStage || 'all';
     document.getElementById('setNickname').value = profile.nickname || '';
     
-    
+    // 更新昵称显示
     const displayName = document.getElementById('profileDisplayName');
     if (displayName) displayName.textContent = profile.nickname || 'LUNA用户';
 
-    
+    // 显示人生阶段提示
     updateLifeStageHint(profile.lifeStage);
 
-    
+    // 更新profile卡片的阶段标签
     const stageInfo = LIFE_STAGES[profile.lifeStage];
     const profileSubtitle = document.querySelector('.profile-subtitle');
     if (profileSubtitle && stageInfo) {
@@ -6618,7 +6648,7 @@ function updateLifeStageHint(stage) {
 function onLifeStageChange() {
     const stage = document.getElementById('setLifeStage').value;
     updateLifeStageHint(stage);
-    
+    // 实时保存
     appData.profile.lifeStage = stage;
     DB.save(appData);
     renderProfilePage();
@@ -6642,7 +6672,7 @@ function submitFeedback() {
     const statusEl = document.getElementById('feedbackStatus');
     const nickname = appData.profile?.nickname || 'LUNA用户';
     
-    
+    // 本地保存
     if (!appData.feedbacks) appData.feedbacks = [];
     appData.feedbacks.push({ text, nickname, date: new Date().toISOString() });
     DB.save(appData);
@@ -6651,8 +6681,8 @@ function submitFeedback() {
     statusEl.style.color = '#C97B7B';
     statusEl.textContent = '📨 发送中...';
     
-    
-    fetch('https:
+    // 通过 FormSubmit 发送邮件（免费，无需服务器）
+    fetch('https://formsubmit.co/ajax/18271216927@163.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -6667,7 +6697,7 @@ function submitFeedback() {
         statusEl.textContent = '✅ 已发送，感谢你的反馈 💗';
         setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
     }).catch(function() {
-        
+        // FormSubmit 失败则用 mailto 兜底
         var subject = encodeURIComponent('[LUNA意见反馈] 来自' + nickname);
         var body = encodeURIComponent('用户：' + nickname + '\n时间：' + new Date().toLocaleString() + '\n\n' + text);
         window.open('mailto:18271216927@163.com?subject=' + subject + '&body=' + body);
@@ -6678,7 +6708,7 @@ function submitFeedback() {
     });
 }
 
-
+// ===== 保存设置 =====
 function saveSettings() {
     appData.profile.cycleLength = parseInt(document.getElementById('setCycleLength').value) || 28;
     appData.profile.periodLength = parseInt(document.getElementById('setPeriodLength').value) || 5;
@@ -6691,7 +6721,7 @@ function saveSettings() {
     renderProfilePage();
 }
 
-
+// ===== 数据管理 =====
 function exportData() {
     const dataStr = JSON.stringify(appData, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
@@ -6741,25 +6771,25 @@ function clearAllData() {
 function checkForUpdate() {
     showToast('正在强制更新...');
     
-    
+    // 1. 注销所有 Service Worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
             registrations.forEach(function(reg) { reg.unregister(); });
         });
     }
     
-    
+    // 2. 清除所有缓存（包括 luna-echo）
     if ('caches' in window) {
         caches.keys().then(function(keys) {
             keys.forEach(function(k) { caches.delete(k); });
         });
     }
     
-    
+    // 3. 1 秒后强制无缓存刷新
     setTimeout(function() { location.reload(true); }, 800);
 }
 
-
+// ===== Toast =====
 function showToast(msg) {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
@@ -6767,7 +6797,7 @@ function showToast(msg) {
     setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-
+// ===== 新用户引导 =====
 function showOnboarding() {
     const overlay = document.getElementById('onboardingOverlay');
     const stagesContainer = document.getElementById('obStages');
@@ -6798,16 +6828,16 @@ function selectLifeStage(stageId) {
     
     document.getElementById('onboardingOverlay').style.display = 'none';
     
-    
+    // 更新知识卡片筛选
     const recCats = Onboarding.getRecommendedCategories(stageId);
     currentKbFilter = recCats[0] || '推荐';
     
     renderHome();
     renderProfilePage();
     
-    
+    // 显示欢迎消息
     let greeting = stage.greeting;
-    
+    // 如果用户还没有设置周期，提示设置
     if (!appData.profile.lastPeriodStart) {
         greeting += '\n\n前往「我的」设置月经周期信息，获取完整的个性化建议。';
     }
@@ -6818,10 +6848,10 @@ function skipOnboarding() {
     document.getElementById('onboardingOverlay').style.display = 'none';
 }
 
-
+// ===== 启动 =====
 document.addEventListener('DOMContentLoaded', init);
 
-
+// ===== 数据精度 =====
 function getRecordMonths(periods) {
     if (!periods || periods.length < 2) return 0;
     var sorted = periods.slice().sort(function(a, b) { return a.startDate.localeCompare(b.startDate); });
@@ -6846,7 +6876,7 @@ function updatePeriodAccuracyBadge(profile, today) {
     }
 }
 
-
+// ===== AI聊天语音 =====
 var isChatRecording = false;
 var chatVoiceText = '';
 
@@ -6890,7 +6920,7 @@ function stopChatVoice() {
     if (btn) { btn.classList.remove('recording'); btn.textContent = '🎤'; }
     if (input) { input.placeholder = '输入你的问题...'; if (chatVoiceText) input.value = chatVoiceText; }
     try { recognition.stop(); } catch(e) {}
-    
+    // 重置回调避免影响其他语音功能
     setTimeout(function() {
         if (recognition) {
             recognition.onresult = null;
@@ -6898,11 +6928,12 @@ function stopChatVoice() {
             recognition.onend = null;
         }
     }, 100);
-    
+    // 有内容时自动发送
     if (chatVoiceText.trim()) {
         setTimeout(function() { sendMessage(); }, 200);
     }
 }
 
 </script>
+</body>
 </html>
