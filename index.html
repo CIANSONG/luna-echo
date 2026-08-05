@@ -4317,19 +4317,21 @@ function renderHome() {
     }
 
     
-    try {
-        const tips = AI.generateTips(appData);
-        const tipsCard = document.getElementById('tipsCard');
-        if (tipsCard) {
-        <div class="tip-item">
-            <div class="tip-emoji">${tip.emoji}</div>
-            <div class="tip-content">
-                <div class="tip-title">${tip.title}</div>
-                <div class="tip-text">${tip.text}</div>
+    const tipsCard = document.getElementById('tipsCard');
+    if (tipsCard) {
+        try {
+            const tips = AI.generateTips(appData);
+            tipsCard.innerHTML = tips.map(tip => `
+            <div class="tip-item">
+                <div class="tip-emoji">${tip.emoji}</div>
+                <div class="tip-content">
+                    <div class="tip-title">${tip.title}</div>
+                    <div class="tip-text">${tip.text}</div>
+                </div>
             </div>
-        </div>
-    `).join('');
-    } } catch(e) {}
+        `).join('');
+        } catch(e) {}
+    }
 
     
     try { renderKnowledgeCards(profile, today); } catch(e) {}
