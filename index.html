@@ -4091,6 +4091,18 @@ const MOOD_KEYWORDS = {
 
 // ===== 初始化 =====
 function init() {
+    // 自动清理旧的 Service Worker 和缓存（防止旧版缓存导致卡死）
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            registrations.forEach(function(reg) { reg.unregister(); });
+        });
+    }
+    if ('caches' in window) {
+        caches.keys().then(function(keys) {
+            keys.forEach(function(k) { caches.delete(k); });
+        });
+    }
+
     appData = DB.load();
 
     // 加载自定义选项
