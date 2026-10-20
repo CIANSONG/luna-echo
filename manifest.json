@@ -2,7 +2,7 @@
   "name": "LUNA Echo — 女性周期健康助手",
   "short_name": "LUNA",
   "description": "女性周期健康管理 · 养雌备孕 · 语音日记社区",
-  "start_url": "./",
+  "start_url": "./?v=20261020-1",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
